@@ -16,11 +16,9 @@ module.exports = {
         return container.dataset.templateId || container.closest('[data-template-id]').dataset.templateId;
     },
     addCustomTemplates: function(templateId, customTemplates) {
-        console.log('addCustomTemplates', _templates, templateId);
         _templates[templateId] = customTemplates;
     },
     getCustomTemplates: function(templateId, name) {
-        console.log('getCustomTemplates', _templates, templateId, name);
         if (_templates[templateId]) {
             return _templates[templateId][name];
         }

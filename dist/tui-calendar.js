@@ -7596,11 +7596,9 @@ module.exports = {
         return container.dataset.templateId || container.closest('[data-template-id]').dataset.templateId;
     },
     addCustomTemplates: function(templateId, customTemplates) {
-        console.log('addCustomTemplates', _templates, templateId);
         _templates[templateId] = customTemplates;
     },
     getCustomTemplates: function(templateId, name) {
-        console.log('getCustomTemplates', _templates, templateId, name);
         if (_templates[templateId]) {
             return _templates[templateId][name];
         }
@@ -24233,7 +24231,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-schedule-title\"\n                  data-title=\""
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"allday-tmpl")||(depth0 && lookupProperty(depth0,"allday-tmpl"))||alias4).call(alias3,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"allday-tmpl","hash":{},"data":data,"loc":{"start":{"line":29,"column":47},"end":{"line":29,"column":70}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias4).call(alias3,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"allday",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":29,"column":47},"end":{"line":29,"column":102}}})) != null ? stack1 : "")
     + "</span>\n            "
     + ((stack1 = lookupProperty(helpers,"unless").call(alias3,(lookupProperty(helpers,"or")||(depth0 && lookupProperty(depth0,"or"))||alias4).call(alias3,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"isReadOnly")),((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"isReadOnly") : stack1),{"name":"or","hash":{},"data":data,"loc":{"start":{"line":30,"column":22},"end":{"line":30,"column":60}}}),{"name":"unless","hash":{},"fn":container.program(21, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":30,"column":12},"end":{"line":30,"column":194}}})) != null ? stack1 : "")
     + "\n        </div>\n";
