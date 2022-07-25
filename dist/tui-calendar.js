@@ -1,6 +1,6 @@
 /*!
  * TOAST UI Calendar
- * @version 1.15.3 | Thu Feb 17 2022
+ * @version 1.15.3 for multiple instance of calendar | Mon Jul 25 2022
  * @author NHN FE Development Lab <dl_javascript@nhn.com>
  * @license MIT
  */
@@ -7570,6 +7570,57 @@ module.exports = {
 
 /***/ }),
 
+/***/ "./src/js/common/templateUtil.js":
+/*!***************************************!*\
+  !*** ./src/js/common/templateUtil.js ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/**
+ * @fileoverview common/templates utilities.
+ */
+
+
+var _templateId = 0;
+var _templates = {};
+
+module.exports = {
+    getTemplateIdGenerator: function() {
+        _templateId += 1;
+
+        return _templateId;
+    },
+    getTemplateIdByContainer: function(container) {
+        return container.dataset.templateId || container.closest('[data-template-id]').dataset.templateId;
+    },
+    addCustomTemplates: function(templateId, customTemplates) {
+        console.log('addCustomTemplates', _templates, templateId);
+        _templates[templateId] = customTemplates;
+    },
+    getCustomTemplates: function(templateId, name) {
+        console.log('getCustomTemplates', _templates, templateId, name);
+        if (_templates[templateId]) {
+            return _templates[templateId][name];
+        }
+
+        return null;
+    },
+    removeCustomTemplates: function(templateId) {
+        if (_templates[templateId]) {
+            delete _templates[templateId];
+
+            return true;
+        }
+
+        return false;
+    }
+};
+
+
+/***/ }),
+
 /***/ "./src/js/common/timezone.js":
 /*!***********************************!*\
   !*** ./src/js/common/timezone.js ***!
@@ -10263,7 +10314,7 @@ var TZDate = tz.Date;
 var config = __webpack_require__(/*! ../config */ "./src/js/config.js");
 var reqAnimFrame = __webpack_require__(/*! ../common/reqAnimFrame */ "./src/js/common/reqAnimFrame.js");
 var sanitizer = __webpack_require__(/*! ../common/sanitizer */ "./src/js/common/sanitizer.js");
-
+var templateUtil = __webpack_require__(/*! ../common/templateUtil */ "./src/js/common/templateUtil.js");
 var mmin = Math.min;
 
 /**
@@ -10799,7 +10850,8 @@ var mmin = Math.min;
 function Calendar(container, options) {
     options = util.extend(
         {
-            usageStatistics: true
+            usageStatistics: true,
+            templateId: templateUtil.getTemplateIdGenerator()
         },
         options
     );
@@ -10811,6 +10863,8 @@ function Calendar(container, options) {
     if (util.isString(container)) {
         container = document.querySelector(container);
     }
+    container.dataset.templateId = options.templateId;
+    this._templateId = options.templateId;
 
     /**
      * Calendar color map
@@ -11030,9 +11084,11 @@ Calendar.prototype._setAdditionalInternalOptions = function(options) {
     };
     var zones, offsetCalculator;
 
+    templateUtil.addCustomTemplates(this._templateId, options.template || {});
+
     util.forEach(options.template, function(func, name) {
         if (func) {
-            Handlebars.registerHelper(name + '-tmpl', templateWithSanitizer(func));
+            Handlebars.create().registerHelper(name + '-tmpl', templateWithSanitizer(func));
         }
     });
 
@@ -18775,6 +18831,7 @@ var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js");
 var domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js");
 var reqAnimFrame = __webpack_require__(/*! ../../common/reqAnimFrame */ "./src/js/common/reqAnimFrame.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var ratio = __webpack_require__(/*! ../../common/common */ "./src/js/common/common.js").ratio;
 var FloatingLayer = __webpack_require__(/*! ../../common/floatingLayer */ "./src/js/common/floatingLayer.js");
 var tmpl = __webpack_require__(/*! ../../view/template/week/timeMoveGuide.hbs */ "./src/js/view/template/week/timeMoveGuide.hbs");
@@ -18914,7 +18971,8 @@ TimeMoveGuide.prototype._refreshGuideElement = function(top, model, viewModel) {
             return;
         }
         self._guideLayer.setPosition(0, top);
-        self._guideLayer.setContent(tmpl(util.extend({model: model}, viewModel)));
+        self._guideLayer.setContent(tmpl(util.extend({model: model,
+            templateId: self._templateId}, viewModel)));
     });
 };
 
@@ -18937,6 +18995,8 @@ TimeMoveGuide.prototype._onDragStart = function(dragStartEventData) {
     this._startGridY = dragStartEventData.nearestGridY;
     this.guideElement = guideElement;
     this._container = dragStartEventData.relatedView.container;
+
+    this._templateId = templateUtil.getTemplateIdByContainer(this._container);
 
     this._model = util.extend(
         Schedule.create(dragStartEventData.model),
@@ -19009,7 +19069,8 @@ TimeMoveGuide.prototype._resetGuideLayer = function() {
     this._guideLayer = new FloatingLayer(null, this._container);
     this._guideLayer.setSize(this._container.getBoundingClientRect().width, this.guideElement.style.height);
     this._guideLayer.setPosition(0, this.guideElement.style.top);
-    this._guideLayer.setContent(tmpl(util.extend({model: this._model}, this._viewModel)));
+    this._guideLayer.setContent(tmpl(util.extend({model: this._model,
+        templateId: this._templateId}, this._viewModel)));
     this._guideLayer.show();
 };
 
@@ -20892,6 +20953,7 @@ var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
     datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common/datetime.js"),
     domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js"),
+    templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js"),
     TZDate = __webpack_require__(/*! ../../common/timezone */ "./src/js/common/timezone.js").Date,
     tmpl = __webpack_require__(/*! ../template/month/month.hbs */ "./src/js/view/template/month/month.hbs"),
     View = __webpack_require__(/*! ../view */ "./src/js/view/view.js"),
@@ -20918,6 +20980,8 @@ function Month(options, container, controller) {
     monthOption = options ? options.month : {};
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     /**
      * @type {Base.Month}
@@ -21119,7 +21183,8 @@ Month.prototype.render = function() {
 
     baseViewModel = {
         daynames: daynameViewModel,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     };
 
     vLayout.panels[0].container.innerHTML = tmpl(baseViewModel);
@@ -21248,6 +21313,7 @@ var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
     domevent = __webpack_require__(/*! ../../common/domevent */ "./src/js/common/domevent.js"),
     domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js"),
+    templateUtils = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js"),
     View = __webpack_require__(/*! ../../view/view */ "./src/js/view/view.js"),
     FloatingLayer = __webpack_require__(/*! ../../common/floatingLayer */ "./src/js/common/floatingLayer.js"),
     common = __webpack_require__(/*! ../../common/common */ "./src/js/common/common.js"),
@@ -21267,6 +21333,8 @@ var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
  */
 function More(options, container, theme) {
     View.call(this, container);
+
+    this._templateId = templateUtils.getTemplateIdByContainer(container);
 
     /**
      * @type {FloatingLayer}
@@ -21396,7 +21464,8 @@ More.prototype.render = function(viewModel) {
         scheduleHeight: opt.scheduleHeight,
         scheduleBulletTop: opt.scheduleBulletTop,
         borderRadius: opt.borderRadius,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     });
 
     width = Math.max(width, VIEW_MIN_WIDTH);
@@ -21543,6 +21612,7 @@ var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
     common = __webpack_require__(/*! ../../common/common.js */ "./src/js/common/common.js"),
     domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js"),
+    templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js"),
     View = __webpack_require__(/*! ../../view/view */ "./src/js/view/view.js"),
     Weekday = __webpack_require__(/*! ../weekday */ "./src/js/view/weekday.js"),
     baseTmpl = __webpack_require__(/*! ../template/month/weekdayInMonth.hbs */ "./src/js/view/template/month/weekdayInMonth.hbs"),
@@ -21564,6 +21634,7 @@ var mfloor = Math.floor,
  */
 function WeekdayInMonth(options, container) {
     Weekday.call(this, options, container);
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
     container.style.height = options.heightPercent + '%';
 }
 
@@ -21642,7 +21713,7 @@ WeekdayInMonth.prototype.getBaseViewModel = function(viewModel) {
  */
 WeekdayInMonth.prototype.render = function(viewModel) {
     var container = this.container,
-        baseViewModel = this.getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleContainer;
 
     if (!this.options.visibleWeeksCount) {
@@ -21741,6 +21812,7 @@ var domevent = __webpack_require__(/*! ../../common/domevent */ "./src/js/common
 var domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js");
 var common = __webpack_require__(/*! ../../common/common */ "./src/js/common/common.js");
 var datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common/datetime.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var tmpl = __webpack_require__(/*! ../template/popup/scheduleCreationPopup.hbs */ "./src/js/view/template/popup/scheduleCreationPopup.hbs");
 var TZDate = timezone.Date;
 var MAX_WEEK_OF_MONTH = 6;
@@ -21754,6 +21826,9 @@ var MAX_WEEK_OF_MONTH = 6;
  */
 function ScheduleCreationPopup(container, calendars, usageStatistics) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     /**
      * @type {FloatingLayer}
      */
@@ -22058,7 +22133,7 @@ ScheduleCreationPopup.prototype.render = function(viewModel) {
         guideElements = this._getGuideElements(this.guide);
         boxElement = guideElements.length ? guideElements[0] : null;
     }
-    layer.setContent(tmpl(viewModel));
+    layer.setContent(tmpl(util.extend(viewModel, {templateId: this._templateId})));
 
     defaultStartDate = new TZDate(viewModel.start);
     defaultEndDate = new TZDate(viewModel.end);
@@ -22394,7 +22469,7 @@ ScheduleCreationPopup.prototype.hide = function() {
  */
 ScheduleCreationPopup.prototype.refresh = function() {
     if (this._viewModel) {
-        this.layer.setContent(this.tmpl(this._viewModel));
+        this.layer.setContent(this.tmpl(util.extend(this._viewModel, {templateId: this._templateId})));
     }
 };
 
@@ -22552,7 +22627,8 @@ var FloatingLayer = __webpack_require__(/*! ../../common/floatingLayer */ "./src
 var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
     domevent = __webpack_require__(/*! ../../common/domevent */ "./src/js/common/domevent.js"),
-    domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js");
+    domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js"),
+    templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var tmpl = __webpack_require__(/*! ../template/popup/scheduleDetailPopup.hbs */ "./src/js/view/template/popup/scheduleDetailPopup.hbs");
 var tz = __webpack_require__(/*! ../../common/timezone */ "./src/js/common/timezone.js");
 var TZDate = tz.Date;
@@ -22565,6 +22641,9 @@ var datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common
  */
 function ScheduleDetailPopup(container) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     /**
      * @type {FloatingLayer}
      */
@@ -22667,7 +22746,8 @@ ScheduleDetailPopup.prototype.render = function(viewModel) {
 
     layer.setContent(tmpl({
         schedule: this._getScheduleModel(viewModel.schedule),
-        calendar: viewModel.calendar
+        calendar: viewModel.calendar,
+        templateId: this._templateId
     }));
     layer.show();
     this._setPopupPositionAndArrowDirection(viewModel.event);
@@ -22946,7 +23026,7 @@ ScheduleDetailPopup.prototype.hide = function() {
  */
 ScheduleDetailPopup.prototype.refresh = function() {
     if (this._viewModel) {
-        this.layer.setContent(this.tmpl(this._viewModel));
+        this.layer.setContent(this.tmpl(util.extend(this._viewModel, {templateId: this._templateId})));
     }
 };
 
@@ -22975,9 +23055,26 @@ var Handlebars = __webpack_require__(/*! handlebars-template-loader/runtime */ "
 var datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common/datetime.js");
 var common = __webpack_require__(/*! ../../common/common */ "./src/js/common/common.js");
 var config = __webpack_require__(/*! ../../config */ "./src/js/config.js");
+var sanitizer = __webpack_require__(/*! ../../common/sanitizer */ "./src/js/common/sanitizer.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var mmax = Math.max;
 var SIXTY_MINUTES = 60;
+
 var helpers = {
+    'getCustomTemplate': function(templateId, name) {
+        var templateFn = templateUtil.getCustomTemplates(templateId, name) || helpers[name + '-tmpl'];
+        var args = Array.prototype.slice.call(arguments).slice(2);
+        var template;
+
+        if (!templateFn) {
+            return '';
+        }
+
+        template = templateFn.apply(null, args);
+
+        return sanitizer.sanitize(template);
+    },
+
     /**
      * Stamp supplied object
      *
@@ -23510,7 +23607,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "\" style=\"color: "
     + alias4(((helper = (helper = lookupProperty(helpers,"color") || (depth0 != null ? lookupProperty(depth0,"color") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"color","hash":{},"data":data,"loc":{"start":{"line":15,"column":52},"end":{"line":15,"column":61}}}) : helper)))
     + ";\">\n            "
-    + ((stack1 = (lookupProperty(helpers,"monthDayname-tmpl")||(depth0 && lookupProperty(depth0,"monthDayname-tmpl"))||alias2).call(alias1,depth0,{"name":"monthDayname-tmpl","hash":{},"data":data,"loc":{"start":{"line":16,"column":12},"end":{"line":16,"column":40}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthDayname",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":16,"column":12},"end":{"line":16,"column":72}}})) != null ? stack1 : "")
     + "\n        </span>\n    </div>\n";
 },"2":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -23602,7 +23699,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "                    "
     + alias3(alias4(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"customStyle") : stack1), depth0))
     + "\">\n                    "
-    + ((stack1 = (lookupProperty(helpers,"allday-tmpl")||(depth0 && lookupProperty(depth0,"allday-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"allday-tmpl","hash":{},"data":data,"loc":{"start":{"line":20,"column":20},"end":{"line":20,"column":43}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"allday",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":20,"column":20},"end":{"line":20,"column":75}}})) != null ? stack1 : "")
     + "\n            </div>\n";
 },"3":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=container.lambda, alias2=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -23682,7 +23779,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "\"\n                        data-title=\""
     + alias3(alias4(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"time-tmpl")||(depth0 && lookupProperty(depth0,"time-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"time-tmpl","hash":{},"data":data,"loc":{"start":{"line":42,"column":53},"end":{"line":42,"column":74}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"time",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":42,"column":53},"end":{"line":42,"column":106}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"9":function(container,depth0,helpers,partials,data) {
     return "                                background: #ffffff\n";
@@ -23747,7 +23844,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-schedule-title\"\n                                    data-title=\""
     + alias3(alias4(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"schedule-tmpl")||(depth0 && lookupProperty(depth0,"schedule-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"schedule-tmpl","hash":{},"data":data,"loc":{"start":{"line":62,"column":65},"end":{"line":62,"column":90}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"schedule",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":62,"column":65},"end":{"line":62,"column":122}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"18":function(container,depth0,helpers,partials,data) {
     var helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -23842,11 +23939,11 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + ";\">\n        <span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":4,"column":21},"end":{"line":4,"column":35}}}) : helper)))
     + "month-more-title-date\">"
-    + ((stack1 = (lookupProperty(helpers,"monthMoreTitleDate-tmpl")||(depth0 && lookupProperty(depth0,"monthMoreTitleDate-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"date") : depth0),(depth0 != null ? lookupProperty(depth0,"dayname") : depth0),{"name":"monthMoreTitleDate-tmpl","hash":{},"data":data,"loc":{"start":{"line":4,"column":58},"end":{"line":4,"column":100}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthMoreTitleDate",(depth0 != null ? lookupProperty(depth0,"date") : depth0),(depth0 != null ? lookupProperty(depth0,"dayname") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":4,"column":58},"end":{"line":4,"column":132}}})) != null ? stack1 : "")
     + "</span>\n        <button type=\"button\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":5,"column":37},"end":{"line":5,"column":51}}}) : helper)))
     + "month-more-close\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"monthMoreClose-tmpl") || (depth0 != null ? lookupProperty(depth0,"monthMoreClose-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"monthMoreClose-tmpl","hash":{},"data":data,"loc":{"start":{"line":5,"column":69},"end":{"line":5,"column":94}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthMoreClose",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":5,"column":69},"end":{"line":5,"column":126}}})) != null ? stack1 : "")
     + "</button>\n    </div>\n    <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":7,"column":16},"end":{"line":7,"column":30}}}) : helper)))
     + "month-more-list\" style=\"padding: "
@@ -23898,7 +23995,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-grid-header\">\n            <span style=\"color: "
     + alias4(((helper = (helper = lookupProperty(helpers,"color") || (depth0 != null ? lookupProperty(depth0,"color") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"color","hash":{},"data":data,"loc":{"start":{"line":14,"column":32},"end":{"line":14,"column":41}}}) : helper)))
     + ";\">"
-    + ((stack1 = (lookupProperty(helpers,"monthGridHeader-tmpl")||(depth0 && lookupProperty(depth0,"monthGridHeader-tmpl"))||alias2).call(alias1,depth0,{"name":"monthGridHeader-tmpl","hash":{},"data":data,"loc":{"start":{"line":14,"column":44},"end":{"line":14,"column":75}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthGridHeader",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":14,"column":44},"end":{"line":14,"column":107}}})) != null ? stack1 : "")
     + "</span>\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"if","hash":{},"fn":container.program(10, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":15,"column":12},"end":{"line":17,"column":19}}})) != null ? stack1 : "")
     + "        </div>\n        <div class=\""
@@ -23906,7 +24003,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-grid-footer\">\n            <span style=\"color: "
     + alias4(((helper = (helper = lookupProperty(helpers,"color") || (depth0 != null ? lookupProperty(depth0,"color") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"color","hash":{},"data":data,"loc":{"start":{"line":20,"column":32},"end":{"line":20,"column":41}}}) : helper)))
     + ";\">"
-    + ((stack1 = (lookupProperty(helpers,"monthGridFooter-tmpl")||(depth0 && lookupProperty(depth0,"monthGridFooter-tmpl"))||alias2).call(alias1,depth0,{"name":"monthGridFooter-tmpl","hash":{},"data":data,"loc":{"start":{"line":20,"column":44},"end":{"line":20,"column":75}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthGridFooter",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":20,"column":44},"end":{"line":20,"column":107}}})) != null ? stack1 : "")
     + "</span>\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"if","hash":{},"fn":container.program(12, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":21,"column":12},"end":{"line":23,"column":19}}})) != null ? stack1 : "")
     + "        </div>\n    </div>\n";
@@ -23967,7 +24064,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-exceed-in-month\" data-ymd=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"ymd") || (depth0 != null ? lookupProperty(depth0,"ymd") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"ymd","hash":{},"data":data,"loc":{"start":{"line":16,"column":78},"end":{"line":16,"column":85}}}) : helper)))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"monthGridHeaderExceed-tmpl")||(depth0 && lookupProperty(depth0,"monthGridHeaderExceed-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"monthGridHeaderExceed-tmpl","hash":{},"data":data,"loc":{"start":{"line":16,"column":87},"end":{"line":16,"column":135}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthGridHeaderExceed",(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":16,"column":87},"end":{"line":16,"column":167}}})) != null ? stack1 : "")
     + "</span>\n";
 },"12":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -23982,7 +24079,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-exceed-in-month\" data-ymd=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"ymd") || (depth0 != null ? lookupProperty(depth0,"ymd") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"ymd","hash":{},"data":data,"loc":{"start":{"line":22,"column":78},"end":{"line":22,"column":85}}}) : helper)))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"monthGridFooterExceed-tmpl")||(depth0 && lookupProperty(depth0,"monthGridFooterExceed-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"monthGridFooterExceed-tmpl","hash":{},"data":data,"loc":{"start":{"line":22,"column":87},"end":{"line":22,"column":135}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"monthGridFooterExceed",(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":22,"column":87},"end":{"line":22,"column":167}}})) != null ? stack1 : "")
     + "</span>\n";
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24257,7 +24354,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "                            \"\n                        data-title=\""
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"time-tmpl")||(depth0 && lookupProperty(depth0,"time-tmpl"))||alias4).call(alias3,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"time-tmpl","hash":{},"data":data,"loc":{"start":{"line":54,"column":53},"end":{"line":54,"column":74}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias4).call(alias3,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"time",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":54,"column":53},"end":{"line":54,"column":106}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"25":function(container,depth0,helpers,partials,data) {
     return "                                background: #ffffff\n";
@@ -24318,7 +24415,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-schedule-title\"\n                                    data-title=\""
     + alias2(alias1(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"schedule-tmpl")||(depth0 && lookupProperty(depth0,"schedule-tmpl"))||alias4).call(alias3,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"schedule-tmpl","hash":{},"data":data,"loc":{"start":{"line":72,"column":65},"end":{"line":72,"column":90}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias4).call(alias3,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"schedule",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":72,"column":65},"end":{"line":72,"column":122}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"34":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24450,32 +24547,32 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
 
   return container.escapeExpression(((helper = (helper = lookupProperty(helpers,"state") || (depth0 != null ? lookupProperty(depth0,"state") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"state","hash":{},"data":data,"loc":{"start":{"line":54,"column":99},"end":{"line":54,"column":108}}}) : helper)));
 },"11":function(container,depth0,helpers,partials,data) {
-    var stack1, helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupStateBusy-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupStateBusy-tmpl") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"popupStateBusy-tmpl","hash":{},"data":data,"loc":{"start":{"line":54,"column":116},"end":{"line":54,"column":141}}}) : helper))) != null ? stack1 : "");
+  return ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupStateBusy",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":54,"column":116},"end":{"line":54,"column":173}}})) != null ? stack1 : "");
 },"13":function(container,depth0,helpers,partials,data) {
-    var stack1, helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupUpdate-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupUpdate-tmpl") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"popupUpdate-tmpl","hash":{},"data":data,"loc":{"start":{"line":69,"column":163},"end":{"line":69,"column":185}}}) : helper))) != null ? stack1 : "");
+  return ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupUpdate",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":69,"column":163},"end":{"line":69,"column":217}}})) != null ? stack1 : "");
 },"15":function(container,depth0,helpers,partials,data) {
-    var stack1, helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
         return undefined
     };
 
-  return ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupSave-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupSave-tmpl") : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"popupSave-tmpl","hash":{},"data":data,"loc":{"start":{"line":69,"column":193},"end":{"line":69,"column":213}}}) : helper))) != null ? stack1 : "");
+  return ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupSave",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":69,"column":225},"end":{"line":69,"column":277}}})) != null ? stack1 : "");
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
@@ -24541,9 +24638,9 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "schedule-title\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":21,"column":64},"end":{"line":21,"column":78}}}) : helper)))
     + "content\" placeholder=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"titlePlaceholder-tmpl") || (depth0 != null ? lookupProperty(depth0,"titlePlaceholder-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"titlePlaceholder-tmpl","hash":{},"data":data,"loc":{"start":{"line":21,"column":100},"end":{"line":21,"column":125}}}) : helper)))
+    + alias4((lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"titlePlaceholder",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":21,"column":100},"end":{"line":21,"column":157}}}))
     + "\" value=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":21,"column":134},"end":{"line":21,"column":143}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"title") || (depth0 != null ? lookupProperty(depth0,"title") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"title","hash":{},"data":data,"loc":{"start":{"line":21,"column":166},"end":{"line":21,"column":175}}}) : helper)))
     + "\">\n            </div>\n            <button id=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":23,"column":24},"end":{"line":23,"column":38}}}) : helper)))
     + "schedule-private\" class=\""
@@ -24571,9 +24668,9 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "schedule-location\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":30,"column":67},"end":{"line":30,"column":81}}}) : helper)))
     + "content\" placeholder=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"locationPlaceholder-tmpl") || (depth0 != null ? lookupProperty(depth0,"locationPlaceholder-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"locationPlaceholder-tmpl","hash":{},"data":data,"loc":{"start":{"line":30,"column":103},"end":{"line":30,"column":131}}}) : helper)))
+    + alias4((lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"locationPlaceholder",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":30,"column":103},"end":{"line":30,"column":163}}}))
     + "\" value=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"location") || (depth0 != null ? lookupProperty(depth0,"location") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"location","hash":{},"data":data,"loc":{"start":{"line":30,"column":140},"end":{"line":30,"column":152}}}) : helper)))
+    + alias4(((helper = (helper = lookupProperty(helpers,"location") || (depth0 != null ? lookupProperty(depth0,"location") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"location","hash":{},"data":data,"loc":{"start":{"line":30,"column":172},"end":{"line":30,"column":184}}}) : helper)))
     + "\">\n            </div>\n        </div>\n        <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":33,"column":20},"end":{"line":33,"column":34}}}) : helper)))
     + "popup-section\">\n            <div class=\""
@@ -24589,7 +24686,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "schedule-start-date\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":36,"column":69},"end":{"line":36,"column":83}}}) : helper)))
     + "content\" placeholder=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"startDatePlaceholder-tmpl") || (depth0 != null ? lookupProperty(depth0,"startDatePlaceholder-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"startDatePlaceholder-tmpl","hash":{},"data":data,"loc":{"start":{"line":36,"column":105},"end":{"line":36,"column":134}}}) : helper)))
+    + alias4((lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"startDatePlaceholder",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":36,"column":105},"end":{"line":36,"column":166}}}))
     + "\">\n                <div id=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":37,"column":25},"end":{"line":37,"column":39}}}) : helper)))
     + "startpicker-container\" style=\"margin-left: -1px; position: relative\"></div>\n            </div>\n            <span class=\""
@@ -24607,7 +24704,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "schedule-end-date\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":42,"column":67},"end":{"line":42,"column":81}}}) : helper)))
     + "content\" placeholder=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"endDatePlaceholder-tmpl") || (depth0 != null ? lookupProperty(depth0,"endDatePlaceholder-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"endDatePlaceholder-tmpl","hash":{},"data":data,"loc":{"start":{"line":42,"column":103},"end":{"line":42,"column":130}}}) : helper)))
+    + alias4((lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"endDatePlaceholder",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":42,"column":103},"end":{"line":42,"column":162}}}))
     + "\">\n                <div id=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":43,"column":25},"end":{"line":43,"column":39}}}) : helper)))
     + "endpicker-container\" style=\"margin-left: -1px; position: relative\"></div>\n            </div>\n            <div class=\""
@@ -24627,7 +24724,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-checkbox\"></span>\n                <span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":48,"column":29},"end":{"line":48,"column":43}}}) : helper)))
     + "content\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupIsAllDay-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupIsAllDay-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"popupIsAllDay-tmpl","hash":{},"data":data,"loc":{"start":{"line":48,"column":52},"end":{"line":48,"column":76}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupIsAllDay",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":48,"column":52},"end":{"line":48,"column":108}}})) != null ? stack1 : "")
     + "</span>\n            </div>\n        </div>\n        <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":51,"column":20},"end":{"line":51,"column":34}}}) : helper)))
     + "popup-section "
@@ -24651,7 +24748,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "schedule-state\" class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":54,"column":63},"end":{"line":54,"column":77}}}) : helper)))
     + "content\">"
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"state") : depth0),{"name":"if","hash":{},"fn":container.program(9, data, 0),"inverse":container.program(11, data, 0),"data":data,"loc":{"start":{"line":54,"column":86},"end":{"line":54,"column":148}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"state") : depth0),{"name":"if","hash":{},"fn":container.program(9, data, 0),"inverse":container.program(11, data, 0),"data":data,"loc":{"start":{"line":54,"column":86},"end":{"line":54,"column":180}}})) != null ? stack1 : "")
     + "</span>\n                <span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":55,"column":29},"end":{"line":55,"column":43}}}) : helper)))
     + "icon "
@@ -24671,7 +24768,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "none\"></span>\n                <span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":60,"column":29},"end":{"line":60,"column":43}}}) : helper)))
     + "content\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupStateBusy-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupStateBusy-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"popupStateBusy-tmpl","hash":{},"data":data,"loc":{"start":{"line":60,"column":52},"end":{"line":60,"column":77}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupStateBusy",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":60,"column":52},"end":{"line":60,"column":109}}})) != null ? stack1 : "")
     + "</span>\n                </li>\n                <li class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":62,"column":27},"end":{"line":62,"column":41}}}) : helper)))
     + "popup-section-item "
@@ -24683,7 +24780,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "none\"></span>\n                <span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":64,"column":29},"end":{"line":64,"column":43}}}) : helper)))
     + "content\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupStateFree-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupStateFree-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"popupStateFree-tmpl","hash":{},"data":data,"loc":{"start":{"line":64,"column":52},"end":{"line":64,"column":77}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupStateFree",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":64,"column":52},"end":{"line":64,"column":109}}})) != null ? stack1 : "")
     + "</span>\n                </li>\n            </ul>\n        </div>\n        <button class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":68,"column":23},"end":{"line":68,"column":37}}}) : helper)))
     + "button "
@@ -24701,7 +24798,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "confirm "
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":69,"column":113},"end":{"line":69,"column":127}}}) : helper)))
     + "popup-save\"><span>"
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"isEditMode") : depth0),{"name":"if","hash":{},"fn":container.program(13, data, 0),"inverse":container.program(15, data, 0),"data":data,"loc":{"start":{"line":69,"column":145},"end":{"line":69,"column":220}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"isEditMode") : depth0),{"name":"if","hash":{},"fn":container.program(13, data, 0),"inverse":container.program(15, data, 0),"data":data,"loc":{"start":{"line":69,"column":145},"end":{"line":69,"column":284}}})) != null ? stack1 : "")
     + "</span></button></div>\n    </div>\n    <div id=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":71,"column":13},"end":{"line":71,"column":27}}}) : helper)))
     + "popup-arrow\" class=\""
@@ -24742,7 +24839,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-location-b\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":11,"column":159},"end":{"line":11,"column":173}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailLocation-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailLocation-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"popupDetailLocation-tmpl","hash":{},"data":data,"loc":{"start":{"line":11,"column":182},"end":{"line":11,"column":221}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailLocation",(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":11,"column":182},"end":{"line":11,"column":253}}})) != null ? stack1 : "")
     + "</span></div>";
 },"3":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24761,7 +24858,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-repeat-b\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":12,"column":163},"end":{"line":12,"column":177}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailRepeat-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailRepeat-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"popupDetailRepeat-tmpl","hash":{},"data":data,"loc":{"start":{"line":12,"column":186},"end":{"line":12,"column":223}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailRepeat",(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":12,"column":186},"end":{"line":12,"column":255}}})) != null ? stack1 : "")
     + "</span></div>";
 },"5":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24782,7 +24879,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-user-b\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":13,"column":195},"end":{"line":13,"column":209}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailUser-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailUser-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"popupDetailUser-tmpl","hash":{},"data":data,"loc":{"start":{"line":13,"column":218},"end":{"line":13,"column":253}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailUser",(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":13,"column":218},"end":{"line":13,"column":285}}})) != null ? stack1 : "")
     + "</span></div>";
 },"7":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24801,7 +24898,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-state-b\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":14,"column":153},"end":{"line":14,"column":167}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailState-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailState-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"popupDetailState-tmpl","hash":{},"data":data,"loc":{"start":{"line":14,"column":176},"end":{"line":14,"column":212}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailState",(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":14,"column":176},"end":{"line":14,"column":244}}})) != null ? stack1 : "")
     + "</span></div>";
 },"9":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24839,7 +24936,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "popup-detail-item-separate\"><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":18,"column":128},"end":{"line":18,"column":142}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailBody-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailBody-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"popupDetailBody-tmpl","hash":{},"data":data,"loc":{"start":{"line":18,"column":151},"end":{"line":18,"column":186}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailBody",(depth0 != null ? lookupProperty(depth0,"schedule") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":18,"column":151},"end":{"line":18,"column":218}}})) != null ? stack1 : "")
     + "</span></div>";
 },"13":function(container,depth0,helpers,partials,data) {
     return "";
@@ -24862,7 +24959,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-edit\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":23,"column":122},"end":{"line":23,"column":136}}}) : helper)))
     + "content\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupEdit-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupEdit-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"popupEdit-tmpl","hash":{},"data":data,"loc":{"start":{"line":23,"column":145},"end":{"line":23,"column":165}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupEdit",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":23,"column":145},"end":{"line":23,"column":197}}})) != null ? stack1 : "")
     + "</span></button>\n      <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":24,"column":18},"end":{"line":24,"column":32}}}) : helper)))
     + "popup-vertical-line\"></div>\n      <button class=\""
@@ -24874,7 +24971,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "ic-delete\"></span><span class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":25,"column":126},"end":{"line":25,"column":140}}}) : helper)))
     + "content\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"popupDelete-tmpl") || (depth0 != null ? lookupProperty(depth0,"popupDelete-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"popupDelete-tmpl","hash":{},"data":data,"loc":{"start":{"line":25,"column":149},"end":{"line":25,"column":171}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDelete",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":25,"column":149},"end":{"line":25,"column":203}}})) != null ? stack1 : "")
     + "</span></button>\n    </div>\n";
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -24909,21 +25006,21 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "popup-detail-date "
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":8,"column":50},"end":{"line":8,"column":64}}}) : helper)))
     + "content\">"
-    + ((stack1 = (lookupProperty(helpers,"popupDetailDate-tmpl")||(depth0 && lookupProperty(depth0,"popupDetailDate-tmpl"))||alias2).call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"isAllDay") : stack1),((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"start") : stack1),((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"end") : stack1),{"name":"popupDetailDate-tmpl","hash":{},"data":data,"loc":{"start":{"line":8,"column":73},"end":{"line":8,"column":145}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"popupDetailDate",((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"isAllDay") : stack1),((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"start") : stack1),((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"end") : stack1),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":8,"column":73},"end":{"line":8,"column":177}}})) != null ? stack1 : "")
     + "</div>\n    </div>\n    <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":10,"column":16},"end":{"line":10,"column":30}}}) : helper)))
     + "section-detail\">\n        "
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"location") : stack1),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":11,"column":8},"end":{"line":11,"column":241}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"location") : stack1),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":11,"column":8},"end":{"line":11,"column":273}}})) != null ? stack1 : "")
     + "\n        "
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"recurrenceRule") : stack1),{"name":"if","hash":{},"fn":container.program(3, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":12,"column":8},"end":{"line":12,"column":243}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"recurrenceRule") : stack1),{"name":"if","hash":{},"fn":container.program(3, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":12,"column":8},"end":{"line":12,"column":275}}})) != null ? stack1 : "")
     + "\n        "
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"attendees") : stack1),{"name":"if","hash":{},"fn":container.program(5, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":13,"column":8},"end":{"line":13,"column":273}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"attendees") : stack1),{"name":"if","hash":{},"fn":container.program(5, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":13,"column":8},"end":{"line":13,"column":305}}})) != null ? stack1 : "")
     + "\n        "
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"state") : stack1),{"name":"if","hash":{},"fn":container.program(7, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":14,"column":8},"end":{"line":14,"column":232}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"state") : stack1),{"name":"if","hash":{},"fn":container.program(7, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":14,"column":8},"end":{"line":14,"column":264}}})) != null ? stack1 : "")
     + "\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"calendar") : depth0),{"name":"if","hash":{},"fn":container.program(9, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":15,"column":8},"end":{"line":17,"column":15}}})) != null ? stack1 : "")
     + "        "
-    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"body") : stack1),{"name":"if","hash":{},"fn":container.program(11, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":18,"column":8},"end":{"line":18,"column":206}}})) != null ? stack1 : "")
+    + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"body") : stack1),{"name":"if","hash":{},"fn":container.program(11, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":18,"column":8},"end":{"line":18,"column":238}}})) != null ? stack1 : "")
     + "\n    </div>\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"schedule") : depth0)) != null ? lookupProperty(stack1,"isReadOnly") : stack1),{"name":"if","hash":{},"fn":container.program(13, data, 0),"inverse":container.program(15, data, 0),"data":data,"loc":{"start":{"line":20,"column":4},"end":{"line":27,"column":11}}})) != null ? stack1 : "")
     + "  </div>\n  <div class=\""
@@ -25025,7 +25122,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "%;\" data-index=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"key") || (data && lookupProperty(data,"key"))) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"key","hash":{},"data":data,"loc":{"start":{"line":20,"column":135},"end":{"line":20,"column":143}}}) : helper)))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"weekGridFooterExceed-tmpl")||(depth0 && lookupProperty(depth0,"weekGridFooterExceed-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"weekGridFooterExceed-tmpl","hash":{},"data":data,"loc":{"start":{"line":20,"column":145},"end":{"line":20,"column":192}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"weekGridFooterExceed",(depth0 != null ? lookupProperty(depth0,"hiddenSchedules") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":20,"column":145},"end":{"line":20,"column":224}}})) != null ? stack1 : "")
     + "</span>\n";
 },"9":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25037,7 +25134,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
 
   return ((stack1 = (lookupProperty(helpers,"fi")||(depth0 && lookupProperty(depth0,"fi"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),(data && lookupProperty(data,"key")),"===",((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"collapseBtnIndex")),{"name":"fi","hash":{},"fn":container.program(10, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":23,"column":16},"end":{"line":25,"column":23}}})) != null ? stack1 : "");
 },"10":function(container,depth0,helpers,partials,data) {
-    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression, lookupProperty = container.lookupProperty || function(parent, propertyName) {
         if (Object.prototype.hasOwnProperty.call(parent, propertyName)) {
           return parent[propertyName];
         }
@@ -25045,11 +25142,11 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     };
 
   return "                    <span class=\""
-    + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":24,"column":33},"end":{"line":24,"column":47}}}) : helper)))
+    + alias3(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === "function" ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":24,"column":33},"end":{"line":24,"column":47}}}) : helper)))
     + "weekday-collapse-btn\" style=\"z-index: 1; right:"
-    + alias4((lookupProperty(helpers,"getRight")||(depth0 && lookupProperty(depth0,"getRight"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"left") : depth0),(depth0 != null ? lookupProperty(depth0,"width") : depth0),{"name":"getRight","hash":{},"data":data,"loc":{"start":{"line":24,"column":94},"end":{"line":24,"column":117}}}))
+    + alias3((lookupProperty(helpers,"getRight")||(depth0 && lookupProperty(depth0,"getRight"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"left") : depth0),(depth0 != null ? lookupProperty(depth0,"width") : depth0),{"name":"getRight","hash":{},"data":data,"loc":{"start":{"line":24,"column":94},"end":{"line":24,"column":117}}}))
     + "%;\">"
-    + ((stack1 = ((helper = (helper = lookupProperty(helpers,"collapseBtnTitle-tmpl") || (depth0 != null ? lookupProperty(depth0,"collapseBtnTitle-tmpl") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"collapseBtnTitle-tmpl","hash":{},"data":data,"loc":{"start":{"line":24,"column":121},"end":{"line":24,"column":148}}}) : helper))) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"collapseBtnTitle",{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":24,"column":121},"end":{"line":24,"column":180}}})) != null ? stack1 : "")
     + "</span>\n";
 },"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25073,7 +25170,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "; padding-right: "
     + alias4(alias5(((stack1 = (depth0 != null ? lookupProperty(depth0,"styles") : depth0)) != null ? lookupProperty(stack1,"leftPaddingRight") : stack1), depth0))
     + ";\">\n    "
-    + ((stack1 = (lookupProperty(helpers,"dayGridTitle-tmpl")||(depth0 && lookupProperty(depth0,"dayGridTitle-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"viewName") : depth0),{"name":"dayGridTitle-tmpl","hash":{},"data":data,"loc":{"start":{"line":2,"column":4},"end":{"line":2,"column":36}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"dayGridTitle",(depth0 != null ? lookupProperty(depth0,"viewName") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":2,"column":4},"end":{"line":2,"column":68}}})) != null ? stack1 : "")
     + "\n</div>\n<div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":4,"column":12},"end":{"line":4,"column":26}}}) : helper)))
     + alias4(((helper = (helper = lookupProperty(helpers,"viewName") || (depth0 != null ? lookupProperty(depth0,"viewName") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"viewName","hash":{},"data":data,"loc":{"start":{"line":4,"column":26},"end":{"line":4,"column":38}}}) : helper)))
@@ -25308,7 +25405,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "dayname-date-area\" style=\"color: "
     + alias4(((helper = (helper = lookupProperty(helpers,"color") || (depth0 != null ? lookupProperty(depth0,"color") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"color","hash":{},"data":data,"loc":{"start":{"line":6,"column":64},"end":{"line":6,"column":73}}}) : helper)))
     + ";\">\n        "
-    + ((stack1 = (lookupProperty(helpers,"weekDayname-tmpl")||(depth0 && lookupProperty(depth0,"weekDayname-tmpl"))||alias2).call(alias1,depth0,{"name":"weekDayname-tmpl","hash":{},"data":data,"loc":{"start":{"line":7,"column":8},"end":{"line":7,"column":35}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"weekDayname",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":7,"column":8},"end":{"line":7,"column":67}}})) != null ? stack1 : "")
     + "\n    </span>\n</div>\n";
 },"2":function(container,depth0,helpers,partials,data) {
     var helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25419,7 +25516,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "                "
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hasComingDuration") : depth0),{"name":"if","hash":{},"fn":container.program(24, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":44,"column":16},"end":{"line":44,"column":96}}})) != null ? stack1 : "")
     + "\">\n                    "
-    + ((stack1 = (lookupProperty(helpers,"time-tmpl")||(depth0 && lookupProperty(depth0,"time-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"time-tmpl","hash":{},"data":data,"loc":{"start":{"line":45,"column":20},"end":{"line":45,"column":41}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"time",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":45,"column":20},"end":{"line":45,"column":73}}})) != null ? stack1 : "")
     + "\n                </div>\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hasComingDuration") : depth0),{"name":"if","hash":{},"fn":container.program(26, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":47,"column":12},"end":{"line":54,"column":19}}})) != null ? stack1 : "")
     + "            </div>\n            "
@@ -25530,7 +25627,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "                border-bottom: 1px dashed "
     + alias4(((helper = (helper = lookupProperty(helpers,"travelBorderColor") || (depth0 != null ? lookupProperty(depth0,"travelBorderColor") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"travelBorderColor","hash":{},"data":data,"loc":{"start":{"line":36,"column":42},"end":{"line":36,"column":63}}}) : helper)))
     + ";\">"
-    + ((stack1 = (lookupProperty(helpers,"goingDuration-tmpl")||(depth0 && lookupProperty(depth0,"goingDuration-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"goingDuration-tmpl","hash":{},"data":data,"loc":{"start":{"line":36,"column":66},"end":{"line":36,"column":96}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"goingDuration",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":36,"column":66},"end":{"line":36,"column":128}}})) != null ? stack1 : "")
     + "</div>\n";
 },"20":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25582,7 +25679,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "px;\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"isFocused") : stack1),{"name":"if","hash":{},"fn":container.program(20, data, 0),"inverse":container.program(27, data, 0),"data":data,"loc":{"start":{"line":49,"column":16},"end":{"line":53,"column":23}}})) != null ? stack1 : "")
     + ";\">"
-    + ((stack1 = (lookupProperty(helpers,"comingDuration-tmpl")||(depth0 && lookupProperty(depth0,"comingDuration-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"comingDuration-tmpl","hash":{},"data":data,"loc":{"start":{"line":53,"column":26},"end":{"line":53,"column":57}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"comingDuration",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":53,"column":26},"end":{"line":53,"column":89}}})) != null ? stack1 : "")
     + "</div>\n";
 },"27":function(container,depth0,helpers,partials,data) {
     var stack1, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25691,7 +25788,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + ";\">\n                    <span style=\""
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hidden") : depth0),{"name":"if","hash":{},"fn":container.program(6, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":7,"column":33},"end":{"line":7,"column":66}}})) != null ? stack1 : "")
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"timegridDisplayPrimayTime-tmpl")||(depth0 && lookupProperty(depth0,"timegridDisplayPrimayTime-tmpl"))||alias2).call(alias1,depth0,{"name":"timegridDisplayPrimayTime-tmpl","hash":{},"data":data,"loc":{"start":{"line":7,"column":68},"end":{"line":7,"column":109}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timegridDisplayPrimayTime",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":7,"column":68},"end":{"line":7,"column":141}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"6":function(container,depth0,helpers,partials,data) {
     return "display:none";
@@ -25720,7 +25817,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "; font-weight: "
     + alias4(alias5(((stack1 = ((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"styles"))) && lookupProperty(stack1,"currentTimeFontWeight")), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"timegridCurrentTime-tmpl")||(depth0 && lookupProperty(depth0,"timegridCurrentTime-tmpl"))||alias2).call(alias1,depth0,{"name":"timegridCurrentTime-tmpl","hash":{},"data":data,"loc":{"start":{"line":12,"column":223},"end":{"line":12,"column":258}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timegridCurrentTime",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":12,"column":223},"end":{"line":12,"column":290}}})) != null ? stack1 : "")
     + "</div>\n                </div>\n";
 },"10":function(container,depth0,helpers,partials,data) {
     var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25751,7 +25848,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + ";\">\n                    <span style=\""
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hidden") : depth0),{"name":"if","hash":{},"fn":container.program(6, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":18,"column":33},"end":{"line":18,"column":66}}})) != null ? stack1 : "")
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"timegridDisplayTime-tmpl")||(depth0 && lookupProperty(depth0,"timegridDisplayTime-tmpl"))||alias2).call(alias1,depth0,{"name":"timegridDisplayTime-tmpl","hash":{},"data":data,"loc":{"start":{"line":18,"column":68},"end":{"line":18,"column":103}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timegridDisplayTime",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":18,"column":68},"end":{"line":18,"column":135}}})) != null ? stack1 : "")
     + "</span>\n                </div>\n";
 },"13":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25776,7 +25873,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "; font-size: "
     + alias4(alias5(((stack1 = ((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"styles"))) && lookupProperty(stack1,"currentTimeFontSize")), depth0))
     + ";\">"
-    + ((stack1 = (lookupProperty(helpers,"timegridCurrentTime-tmpl")||(depth0 && lookupProperty(depth0,"timegridCurrentTime-tmpl"))||alias2).call(alias1,depth0,{"name":"timegridCurrentTime-tmpl","hash":{},"data":data,"loc":{"start":{"line":23,"column":171},"end":{"line":23,"column":206}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timegridCurrentTime",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":23,"column":171},"end":{"line":23,"column":238}}})) != null ? stack1 : "")
     + "</div>\n                </div>\n";
 },"15":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25900,8 +25997,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"compiler":[8,"
         return undefined
     };
 
-  return ((stack1 = (lookupProperty(helpers,"timegridCurrentTime-tmpl")||(depth0 && lookupProperty(depth0,"timegridCurrentTime-tmpl"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),depth0,{"name":"timegridCurrentTime-tmpl","hash":{},"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":1,"column":35}}})) != null ? stack1 : "")
-    + "\n";
+  return ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timegridCurrentTime",depth0,{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":1,"column":67}}})) != null ? stack1 : "");
 },"useData":true});
 
 /***/ }),
@@ -25933,7 +26029,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "; height: "
     + alias4(((helper = (helper = lookupProperty(helpers,"goingDurationHeight") || (depth0 != null ? lookupProperty(depth0,"goingDurationHeight") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"goingDurationHeight","hash":{},"data":data,"loc":{"start":{"line":4,"column":203},"end":{"line":4,"column":226}}}) : helper)))
     + "%;\">"
-    + ((stack1 = (lookupProperty(helpers,"goingDuration-tmpl")||(depth0 && lookupProperty(depth0,"goingDuration-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"goingDuration-tmpl","hash":{},"data":data,"loc":{"start":{"line":4,"column":230},"end":{"line":4,"column":260}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"goingDuration",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":4,"column":230},"end":{"line":4,"column":292}}})) != null ? stack1 : "")
     + "</div>\n";
 },"3":function(container,depth0,helpers,partials,data) {
     var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression, alias5=container.lambda, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25954,7 +26050,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "; height: "
     + alias4(((helper = (helper = lookupProperty(helpers,"comingDurationHeight") || (depth0 != null ? lookupProperty(depth0,"comingDurationHeight") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"comingDurationHeight","hash":{},"data":data,"loc":{"start":{"line":10,"column":200},"end":{"line":10,"column":224}}}) : helper)))
     + "%;\">"
-    + ((stack1 = (lookupProperty(helpers,"comingDuration-tmpl")||(depth0 && lookupProperty(depth0,"comingDuration-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"comingDuration-tmpl","hash":{},"data":data,"loc":{"start":{"line":10,"column":228},"end":{"line":10,"column":259}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"comingDuration",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":10,"column":228},"end":{"line":10,"column":291}}})) != null ? stack1 : "")
     + "</div>\n";
 },"5":function(container,depth0,helpers,partials,data) {
     var helper, lookupProperty = container.lookupProperty || function(parent, propertyName) {
@@ -25994,7 +26090,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "%; border-color:"
     + alias4(alias5(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"borderColor") : stack1), depth0))
     + ";\">\n                "
-    + ((stack1 = (lookupProperty(helpers,"time-tmpl")||(depth0 && lookupProperty(depth0,"time-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"time-tmpl","hash":{},"data":data,"loc":{"start":{"line":7,"column":16},"end":{"line":7,"column":37}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"time",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":7,"column":16},"end":{"line":7,"column":69}}})) != null ? stack1 : "")
     + "\n            </div>\n"
     + ((stack1 = lookupProperty(helpers,"if").call(alias1,(depth0 != null ? lookupProperty(depth0,"hasComingDuration") : depth0),{"name":"if","hash":{},"fn":container.program(3, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":9,"column":8},"end":{"line":11,"column":15}}})) != null ? stack1 : "")
     + "    </div>\n    "
@@ -26047,7 +26143,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "        <div class=\""
     + alias4(((helper = (helper = lookupProperty(helpers,"CSS_PREFIX") || (depth0 != null ? lookupProperty(depth0,"CSS_PREFIX") : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"CSS_PREFIX","hash":{},"data":data,"loc":{"start":{"line":11,"column":20},"end":{"line":11,"column":34}}}) : helper)))
     + "timegrid-timezone-label\">"
-    + ((stack1 = (lookupProperty(helpers,"timezoneDisplayLabel-tmpl")||(depth0 && lookupProperty(depth0,"timezoneDisplayLabel-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"timezoneOffset") : depth0),(depth0 != null ? lookupProperty(depth0,"displayLabel") : depth0),{"name":"timezoneDisplayLabel-tmpl","hash":{},"data":data,"loc":{"start":{"line":11,"column":59},"end":{"line":11,"column":118}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"timezoneDisplayLabel",(depth0 != null ? lookupProperty(depth0,"timezoneOffset") : depth0),(depth0 != null ? lookupProperty(depth0,"displayLabel") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":11,"column":59},"end":{"line":11,"column":150}}})) != null ? stack1 : "")
     + "</div>\n    </div>\n</div>\n";
 },"2":function(container,depth0,helpers,partials,data) {
     return "display:none;";
@@ -26352,7 +26448,8 @@ var config = __webpack_require__(/*! ../../config */ "./src/js/config.js"),
     View = __webpack_require__(/*! ../../view/view */ "./src/js/view/view.js"),
     DayGridSchedule = __webpack_require__(/*! ./dayGridSchedule */ "./src/js/view/week/dayGridSchedule.js"),
     baseTmpl = __webpack_require__(/*! ../template/week/dayGrid.hbs */ "./src/js/view/template/week/dayGrid.hbs"),
-    reqAnimFrame = __webpack_require__(/*! ../../common/reqAnimFrame */ "./src/js/common/reqAnimFrame.js");
+    reqAnimFrame = __webpack_require__(/*! ../../common/reqAnimFrame */ "./src/js/common/reqAnimFrame.js"),
+    templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var mmax = Math.max,
     mmin = Math.min;
 
@@ -26377,6 +26474,8 @@ function DayGrid(name, options, container, theme) {
         config.classname('daygrid-layout')
     );
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     name = name || 'daygrid';
 
@@ -26487,7 +26586,7 @@ DayGrid.prototype.getBaseViewModel = function(viewModel) {
 DayGrid.prototype.render = function(viewModel) {
     var opt = this.options,
         container = this.container,
-        baseViewModel = this.getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleContainerTop = this.options.scheduleContainerTop;
     var dayGridSchedule;
 
@@ -26677,6 +26776,7 @@ module.exports = DayGrid;
 
 var util = __webpack_require__(/*! tui-code-snippet */ "tui-code-snippet");
 var Weekday = __webpack_require__(/*! ../weekday */ "./src/js/view/weekday.js"),
+    templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js"),
     tmpl = __webpack_require__(/*! ../template/week/dayGridSchedule.hbs */ "./src/js/view/template/week/dayGridSchedule.hbs");
 var mmax = Math.max;
 
@@ -26694,6 +26794,8 @@ var mmax = Math.max;
 function DayGridSchedule(options, container) {
     Weekday.call(this, options, container);
 
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     this.collapsed = true;
 }
 
@@ -26707,7 +26809,7 @@ DayGridSchedule.prototype.render = function(viewModel) {
     var container = this.container;
     var baseViewModel;
 
-    baseViewModel = this.getBaseViewModel(viewModel);
+    baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId});
 
     container.innerHTML = tmpl(baseViewModel);
 
@@ -26808,6 +26910,7 @@ var common = __webpack_require__(/*! ../../common/common */ "./src/js/common/com
 var datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common/datetime.js");
 var TZDate = __webpack_require__(/*! ../../common/timezone */ "./src/js/common/timezone.js").Date;
 var domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/domutil.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var View = __webpack_require__(/*! ../view */ "./src/js/view/view.js");
 var daynameTmpl = __webpack_require__(/*! ../template/week/daynames.hbs */ "./src/js/view/template/week/daynames.hbs");
 
@@ -26836,6 +26939,8 @@ function DayName(options, container, theme) {
     this.theme = theme;
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     this.applyTheme();
 }
@@ -26893,7 +26998,8 @@ DayName.prototype.render = function(viewModel) {
     var styles = this._getStyles(this.theme, timezonesCollapsed);
     var baseViewModel = util.extend({}, {
         dayNames: dayNames,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     });
 
     this.container.innerHTML = daynameTmpl(baseViewModel);
@@ -26997,6 +27103,7 @@ var domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/d
 var View = __webpack_require__(/*! ../view */ "./src/js/view/view.js");
 var timeTmpl = __webpack_require__(/*! ../template/week/time.hbs */ "./src/js/view/template/week/time.hbs");
 var tz = __webpack_require__(/*! ../../common/timezone */ "./src/js/common/timezone.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 
 var forEachArr = util.forEachArray;
 var SCHEDULE_MIN_DURATION = datetime.MILLISECONDS_SCHEDULE_MIN_DURATION;
@@ -27057,6 +27164,8 @@ function getOffsetStart(viewModel, options) {
  */
 function Time(options, container, theme) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     this.options = util.extend(
         {
@@ -27297,7 +27406,8 @@ Time.prototype.render = function(ymd, matrices, containerHeight) {
     this.container.innerHTML = this.timeTmpl({
         matrices: matrices,
         styles: this._getStyles(this.theme),
-        isReadOnly: this.options.isReadOnly
+        isReadOnly: this.options.isReadOnly,
+        templateId: this._templateId
     });
 };
 
@@ -27355,6 +27465,7 @@ var domutil = __webpack_require__(/*! ../../common/domutil */ "./src/js/common/d
 var domevent = __webpack_require__(/*! ../../common/domevent */ "./src/js/common/domevent.js");
 var datetime = __webpack_require__(/*! ../../common/datetime */ "./src/js/common/datetime.js");
 var tz = __webpack_require__(/*! ../../common/timezone */ "./src/js/common/timezone.js");
+var templateUtil = __webpack_require__(/*! ../../common/templateUtil */ "./src/js/common/templateUtil.js");
 var reqAnimFrame = __webpack_require__(/*! ../../common/reqAnimFrame */ "./src/js/common/reqAnimFrame.js");
 var View = __webpack_require__(/*! ../view */ "./src/js/view/view.js");
 var Time = __webpack_require__(/*! ./time */ "./src/js/view/week/time.js");
@@ -27487,6 +27598,8 @@ function TimeGrid(name, options, panelElement) {
     name = name || 'time';
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     if (!util.browser.safari) {
         /**
@@ -27809,7 +27922,7 @@ TimeGrid.prototype.render = function(viewModel) {
         timeViewModel = viewModel.schedulesInDateRange[opt.viewName],
         container = this.container,
         grids = viewModel.grids,
-        baseViewModel = this._getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this._getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleLen = util.keys(timeViewModel).length;
 
     this._cacheParentViewModel = viewModel;
@@ -27870,6 +27983,7 @@ TimeGrid.prototype.refreshHourmarker = function() {
     var viewModel = this._cacheParentViewModel;
     var hoursLabels = this._cacheHoursLabels;
     var rAnimationFrameID = this.rAnimationFrameID;
+    var self = this;
     var baseViewModel;
 
     if (!hourmarkers || !viewModel || rAnimationFrameID) {
@@ -27914,7 +28028,7 @@ TimeGrid.prototype.refreshHourmarker = function() {
                 }
                 if (hourmarkerContainer) {
                     hourmarkerContainer.innerHTML = timegridCurrentTimeTmpl(
-                        baseViewModel.hourmarkerTimzones[timezoneIndex]
+                        util.extend(baseViewModel.hourmarkerTimzones[timezoneIndex], {templateId: self._templateId})
                     );
                 }
             });
