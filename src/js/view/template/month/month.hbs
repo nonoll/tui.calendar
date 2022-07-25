@@ -13,7 +13,7 @@
                 {{/unless}}
                 ">
         <span class="{{holiday day}}" style="color: {{color}};">
-            {{{monthDayname-tmpl this}}}
+            {{{getCustomTemplate @root.templateId 'monthDayname' this}}}
         </span>
     </div>
 {{/each}}

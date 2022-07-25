@@ -11,15 +11,15 @@
         {{/unless}}
         ">
         <div class="{{CSS_PREFIX}}weekday-grid-header">
-            <span style="color: {{color}};">{{{monthGridHeader-tmpl this}}}</span>
+            <span style="color: {{color}};">{{{getCustomTemplate @root.templateId 'monthGridHeader' this}}}</span>
             {{#if hiddenSchedules}}
-                <span class="{{CSS_PREFIX}}weekday-exceed-in-month" data-ymd="{{ymd}}">{{{monthGridHeaderExceed-tmpl hiddenSchedules}}}</span>
+                <span class="{{CSS_PREFIX}}weekday-exceed-in-month" data-ymd="{{ymd}}">{{{getCustomTemplate @root.templateId 'monthGridHeaderExceed' hiddenSchedules}}}</span>
             {{/if}}
         </div>
         <div class="{{CSS_PREFIX}}weekday-grid-footer">
-            <span style="color: {{color}};">{{{monthGridFooter-tmpl this}}}</span>
+            <span style="color: {{color}};">{{{getCustomTemplate @root.templateId 'monthGridFooter' this}}}</span>
             {{#if hiddenSchedules}}
-                <span class="{{CSS_PREFIX}}weekday-exceed-in-month" data-ymd="{{ymd}}">{{{monthGridFooterExceed-tmpl hiddenSchedules}}}</span>
+                <span class="{{CSS_PREFIX}}weekday-exceed-in-month" data-ymd="{{ymd}}">{{{getCustomTemplate @root.templateId 'monthGridFooterExceed' hiddenSchedules}}}</span>
             {{/if}}
         </div>
     </div>

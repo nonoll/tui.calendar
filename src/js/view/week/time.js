@@ -11,6 +11,7 @@ var domutil = require('../../common/domutil');
 var View = require('../view');
 var timeTmpl = require('../template/week/time.hbs');
 var tz = require('../../common/timezone');
+var templateUtil = require('../../common/templateUtil');
 
 var forEachArr = util.forEachArray;
 var SCHEDULE_MIN_DURATION = datetime.MILLISECONDS_SCHEDULE_MIN_DURATION;
@@ -71,6 +72,8 @@ function getOffsetStart(viewModel, options) {
  */
 function Time(options, container, theme) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     this.options = util.extend(
         {
@@ -311,7 +314,8 @@ Time.prototype.render = function(ymd, matrices, containerHeight) {
     this.container.innerHTML = this.timeTmpl({
         matrices: matrices,
         styles: this._getStyles(this.theme),
-        isReadOnly: this.options.isReadOnly
+        isReadOnly: this.options.isReadOnly,
+        templateId: this._templateId
     });
 };
 

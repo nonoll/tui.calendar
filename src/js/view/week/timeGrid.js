@@ -11,6 +11,7 @@ var domutil = require('../../common/domutil');
 var domevent = require('../../common/domevent');
 var datetime = require('../../common/datetime');
 var tz = require('../../common/timezone');
+var templateUtil = require('../../common/templateUtil');
 var reqAnimFrame = require('../../common/reqAnimFrame');
 var View = require('../view');
 var Time = require('./time');
@@ -143,6 +144,8 @@ function TimeGrid(name, options, panelElement) {
     name = name || 'time';
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     if (!util.browser.safari) {
         /**
@@ -465,7 +468,7 @@ TimeGrid.prototype.render = function(viewModel) {
         timeViewModel = viewModel.schedulesInDateRange[opt.viewName],
         container = this.container,
         grids = viewModel.grids,
-        baseViewModel = this._getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this._getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleLen = util.keys(timeViewModel).length;
 
     this._cacheParentViewModel = viewModel;
@@ -526,6 +529,7 @@ TimeGrid.prototype.refreshHourmarker = function() {
     var viewModel = this._cacheParentViewModel;
     var hoursLabels = this._cacheHoursLabels;
     var rAnimationFrameID = this.rAnimationFrameID;
+    var self = this;
     var baseViewModel;
 
     if (!hourmarkers || !viewModel || rAnimationFrameID) {
@@ -570,7 +574,7 @@ TimeGrid.prototype.refreshHourmarker = function() {
                 }
                 if (hourmarkerContainer) {
                     hourmarkerContainer.innerHTML = timegridCurrentTimeTmpl(
-                        baseViewModel.hourmarkerTimzones[timezoneIndex]
+                        util.extend(baseViewModel.hourmarkerTimzones[timezoneIndex], {templateId: self._templateId})
                     );
                 }
             });

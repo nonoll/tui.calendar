@@ -4,23 +4,23 @@
         {{#if isPrimary}}
             {{#each timeSlots ~}}
                 <div class="{{CSS_PREFIX}}timegrid-hour" style="height: {{@root.styles.oneHourHeight}}; color: {{color}}; font-weight: {{fontWeight}};">
-                    <span style="{{#if hidden}}display:none{{/if}}">{{{timegridDisplayPrimayTime-tmpl this}}}</span>
+                    <span style="{{#if hidden}}display:none{{/if}}">{{{getCustomTemplate @root.templateId 'timegridDisplayPrimayTime' this}}}</span>
                 </div>
             {{/each ~}}
             {{#if @root.showHourMarker}}
                 <div class="{{CSS_PREFIX}}timegrid-hourmarker" style="top:{{@root.hourmarkerTop}}%; margin-top: calc(6px - {{@root.styles.halfHourHeight}}); height: {{@root.styles.halfHourHeight}};">
-                    <div class="{{CSS_PREFIX}}timegrid-hourmarker-time" style="color: {{@root.styles.currentTimeColor}}; font-size: {{@root.styles.currentTimeFontSize}}; font-weight: {{@root.styles.currentTimeFontWeight}}">{{{timegridCurrentTime-tmpl this}}}</div>
+                    <div class="{{CSS_PREFIX}}timegrid-hourmarker-time" style="color: {{@root.styles.currentTimeColor}}; font-size: {{@root.styles.currentTimeFontSize}}; font-weight: {{@root.styles.currentTimeFontWeight}}">{{{getCustomTemplate @root.templateId 'timegridCurrentTime' this}}}</div>
                 </div>
             {{/if}}
         {{else}}
             {{#each timeSlots ~}}
                 <div class="{{CSS_PREFIX}}timegrid-hour" style="height: {{@root.styles.oneHourHeight}}; color: {{color}}; font-weight: {{fontWeight}};">
-                    <span style="{{#if hidden}}display:none{{/if}}">{{{timegridDisplayTime-tmpl this}}}</span>
+                    <span style="{{#if hidden}}display:none{{/if}}">{{{getCustomTemplate @root.templateId 'timegridDisplayTime' this}}}</span>
                 </div>
             {{/each ~}}
             {{#if @root.showHourMarker}}
                 <div class="{{CSS_PREFIX}}timegrid-hourmarker" style="top:{{@root.hourmarkerTop}}%; margin-top: calc(6px - {{@root.styles.halfHourHeight}}); height: {{@root.styles.halfHourHeight}};">
-                    <div class="{{CSS_PREFIX}}timegrid-hourmarker-time" style="color: {{@root.styles.currentTimeColor}}; font-size: {{@root.styles.currentTimeFontSize}};">{{{timegridCurrentTime-tmpl this}}}</div>
+                    <div class="{{CSS_PREFIX}}timegrid-hourmarker-time" style="color: {{@root.styles.currentTimeColor}}; font-size: {{@root.styles.currentTimeFontSize}};">{{{getCustomTemplate @root.templateId 'timegridCurrentTime' this}}}</div>
                 </div>
             {{/if}}
         {{/if}}

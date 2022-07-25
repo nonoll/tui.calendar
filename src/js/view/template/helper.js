@@ -10,9 +10,26 @@ var Handlebars = require('handlebars-template-loader/runtime');
 var datetime = require('../../common/datetime');
 var common = require('../../common/common');
 var config = require('../../config');
+var sanitizer = require('../../common/sanitizer');
+var templateUtil = require('../../common/templateUtil');
 var mmax = Math.max;
 var SIXTY_MINUTES = 60;
+
 var helpers = {
+    'getCustomTemplate': function(templateId, name) {
+        var templateFn = templateUtil.getCustomTemplates(templateId, name) || helpers[name + '-tmpl'];
+        var args = Array.prototype.slice.call(arguments).slice(2);
+        var template;
+
+        if (!templateFn) {
+            return '';
+        }
+
+        template = templateFn.apply(null, args);
+
+        return sanitizer.sanitize(template);
+    },
+
     /**
      * Stamp supplied object
      *

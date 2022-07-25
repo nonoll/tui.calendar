@@ -10,6 +10,7 @@ var util = require('tui-code-snippet');
 var config = require('../../config'),
     domevent = require('../../common/domevent'),
     domutil = require('../../common/domutil'),
+    templateUtils = require('../../common/templateUtil'),
     View = require('../../view/view'),
     FloatingLayer = require('../../common/floatingLayer'),
     common = require('../../common/common'),
@@ -29,6 +30,8 @@ var config = require('../../config'),
  */
 function More(options, container, theme) {
     View.call(this, container);
+
+    this._templateId = templateUtils.getTemplateIdByContainer(container);
 
     /**
      * @type {FloatingLayer}
@@ -158,7 +161,8 @@ More.prototype.render = function(viewModel) {
         scheduleHeight: opt.scheduleHeight,
         scheduleBulletTop: opt.scheduleBulletTop,
         borderRadius: opt.borderRadius,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     });
 
     width = Math.max(width, VIEW_MIN_WIDTH);

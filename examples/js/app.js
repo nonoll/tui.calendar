@@ -186,12 +186,19 @@
         switch (action) {
             case 'move-prev':
                 cal.prev();
+                setTimeout(() => {
+                    cal2.prev();
+                    cal2.render();
+                }, 1000);
                 break;
             case 'move-next':
+                cal2.next();
                 cal.next();
+                cal2.render();
                 break;
             case 'move-today':
                 cal.today();
+                cal2.today();
                 break;
             default:
                 return;

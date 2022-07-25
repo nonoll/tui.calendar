@@ -8,7 +8,7 @@
                 </span>
             </div>
         {{/if}}
-        <div class="{{CSS_PREFIX}}timegrid-timezone-label">{{{timezoneDisplayLabel-tmpl timezoneOffset displayLabel}}}</div>
+        <div class="{{CSS_PREFIX}}timegrid-timezone-label">{{{getCustomTemplate @root.templateId 'timezoneDisplayLabel' timezoneOffset displayLabel}}}</div>
     </div>
 </div>
 {{/each ~}}

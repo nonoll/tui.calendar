@@ -20,7 +20,7 @@ var TZDate = tz.Date;
 var config = require('../config');
 var reqAnimFrame = require('../common/reqAnimFrame');
 var sanitizer = require('../common/sanitizer');
-
+var templateUtil = require('../common/templateUtil');
 var mmin = Math.min;
 
 /**
@@ -556,7 +556,8 @@ var mmin = Math.min;
 function Calendar(container, options) {
     options = util.extend(
         {
-            usageStatistics: true
+            usageStatistics: true,
+            templateId: templateUtil.getTemplateIdGenerator()
         },
         options
     );
@@ -568,6 +569,8 @@ function Calendar(container, options) {
     if (util.isString(container)) {
         container = document.querySelector(container);
     }
+    container.dataset.templateId = options.templateId;
+    this._templateId = options.templateId;
 
     /**
      * Calendar color map
@@ -787,9 +790,11 @@ Calendar.prototype._setAdditionalInternalOptions = function(options) {
     };
     var zones, offsetCalculator;
 
+    templateUtil.addCustomTemplates(this._templateId, options.template || {});
+
     util.forEach(options.template, function(func, name) {
         if (func) {
-            Handlebars.registerHelper(name + '-tmpl', templateWithSanitizer(func));
+            Handlebars.create().registerHelper(name + '-tmpl', templateWithSanitizer(func));
         }
     });
 

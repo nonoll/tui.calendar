@@ -8,6 +8,7 @@ var util = require('tui-code-snippet');
 var config = require('../../config');
 var domutil = require('../../common/domutil');
 var reqAnimFrame = require('../../common/reqAnimFrame');
+var templateUtil = require('../../common/templateUtil');
 var ratio = require('../../common/common').ratio;
 var FloatingLayer = require('../../common/floatingLayer');
 var tmpl = require('../../view/template/week/timeMoveGuide.hbs');
@@ -147,7 +148,8 @@ TimeMoveGuide.prototype._refreshGuideElement = function(top, model, viewModel) {
             return;
         }
         self._guideLayer.setPosition(0, top);
-        self._guideLayer.setContent(tmpl(util.extend({model: model}, viewModel)));
+        self._guideLayer.setContent(tmpl(util.extend({model: model,
+            templateId: self._templateId}, viewModel)));
     });
 };
 
@@ -170,6 +172,8 @@ TimeMoveGuide.prototype._onDragStart = function(dragStartEventData) {
     this._startGridY = dragStartEventData.nearestGridY;
     this.guideElement = guideElement;
     this._container = dragStartEventData.relatedView.container;
+
+    this._templateId = templateUtil.getTemplateIdByContainer(this._container);
 
     this._model = util.extend(
         Schedule.create(dragStartEventData.model),
@@ -242,7 +246,8 @@ TimeMoveGuide.prototype._resetGuideLayer = function() {
     this._guideLayer = new FloatingLayer(null, this._container);
     this._guideLayer.setSize(this._container.getBoundingClientRect().width, this.guideElement.style.height);
     this._guideLayer.setPosition(0, this.guideElement.style.top);
-    this._guideLayer.setContent(tmpl(util.extend({model: this._model}, this._viewModel)));
+    this._guideLayer.setContent(tmpl(util.extend({model: this._model,
+        templateId: this._templateId}, this._viewModel)));
     this._guideLayer.show();
 };
 

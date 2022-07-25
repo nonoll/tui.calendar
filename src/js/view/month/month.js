@@ -8,6 +8,7 @@ var util = require('tui-code-snippet');
 var config = require('../../config'),
     datetime = require('../../common/datetime'),
     domutil = require('../../common/domutil'),
+    templateUtil = require('../../common/templateUtil'),
     TZDate = require('../../common/timezone').Date,
     tmpl = require('../template/month/month.hbs'),
     View = require('../view'),
@@ -34,6 +35,8 @@ function Month(options, container, controller) {
     monthOption = options ? options.month : {};
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     /**
      * @type {Base.Month}
@@ -235,7 +238,8 @@ Month.prototype.render = function() {
 
     baseViewModel = {
         daynames: daynameViewModel,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     };
 
     vLayout.panels[0].container.innerHTML = tmpl(baseViewModel);

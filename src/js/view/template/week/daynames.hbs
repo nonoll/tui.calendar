@@ -4,7 +4,7 @@
      data-date="{{renderDate}}"
      style="{{common-width width}};left:{{left}}%; line-height: {{@root.styles.height}}; border-left: {{@root.styles.borderLeft}}; padding-left: {{@root.styles.paddingLeft}};">
     <span class="{{CSS_PREFIX}}dayname-date-area" style="color: {{color}};">
-        {{{weekDayname-tmpl this}}}
+        {{{getCustomTemplate @root.templateId 'weekDayname' this}}}
     </span>
 </div>
 {{/each}}

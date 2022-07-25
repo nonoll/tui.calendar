@@ -1,8 +1,8 @@
 <div class="{{CSS_PREFIX}}month-more" style="padding-bottom: {{styles.paddingBottom}}; border: {{styles.border}}; box-shadow: {{styles.boxShadow}}; background-color: {{styles.backgroundColor}};">
     <div class="{{CSS_PREFIX}}month-more-title"
         style="height: {{styles.titleHeight}}; margin-bottom: {{styles.titleMarginBottom}}; background-color: {{styles.titleBackgroundColor}}; border-bottom: {{styles.titleBorderBottom}}; padding: {{styles.titlePadding}};">
-        <span class="{{CSS_PREFIX}}month-more-title-date">{{{monthMoreTitleDate-tmpl date dayname}}}</span>
-        <button type="button" class="{{CSS_PREFIX}}month-more-close">{{{monthMoreClose-tmpl}}}</button>
+        <span class="{{CSS_PREFIX}}month-more-title-date">{{{getCustomTemplate @root.templateId 'monthMoreTitleDate' date dayname}}}</span>
+        <button type="button" class="{{CSS_PREFIX}}month-more-close">{{{getCustomTemplate @root.templateId 'monthMoreClose'}}}</button>
     </div>
     <div class="{{CSS_PREFIX}}month-more-list" style="padding: {{styles.listPadding}}; height: {{styles.listHeight}};">
         {{#each schedules}}
@@ -17,7 +17,7 @@
                         color:{{model.color}}; background-color:{{model.bgColor}}; border-left:3px solid {{model.borderColor}};
                     {{/if}}
                     {{model.customStyle}}">
-                    {{{allday-tmpl model}}}
+                    {{{getCustomTemplate @root.templateId 'allday' model}}}
             </div>
         {{else}}
             {{#fi model.category '===' 'time'}}
@@ -39,7 +39,7 @@
                             {{else}}
                                 color:#333;
                             {{/if}}"
-                        data-title="{{model.title}}">{{{time-tmpl model}}}</span>
+                        data-title="{{model.title}}">{{{getCustomTemplate @root.templateId 'time' model}}}</span>
                 </div>
             {{else ~}}
                 <div data-id="{{stamp model}}"
@@ -59,7 +59,7 @@
                     {{/if}}
                         {{model.customStyle}}">
                     <span class="{{CSS_PREFIX}}weekday-schedule-title"
-                                    data-title="{{model.title}}">{{{schedule-tmpl model}}}</span>
+                                    data-title="{{model.title}}">{{{getCustomTemplate @root.templateId 'schedule' model}}}</span>
                 </div>
             {{/fi}}
         {{/fi}}

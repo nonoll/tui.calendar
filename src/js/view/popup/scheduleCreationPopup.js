@@ -14,6 +14,7 @@ var domevent = require('../../common/domevent');
 var domutil = require('../../common/domutil');
 var common = require('../../common/common');
 var datetime = require('../../common/datetime');
+var templateUtil = require('../../common/templateUtil');
 var tmpl = require('../template/popup/scheduleCreationPopup.hbs');
 var TZDate = timezone.Date;
 var MAX_WEEK_OF_MONTH = 6;
@@ -27,6 +28,9 @@ var MAX_WEEK_OF_MONTH = 6;
  */
 function ScheduleCreationPopup(container, calendars, usageStatistics) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     /**
      * @type {FloatingLayer}
      */
@@ -331,7 +335,7 @@ ScheduleCreationPopup.prototype.render = function(viewModel) {
         guideElements = this._getGuideElements(this.guide);
         boxElement = guideElements.length ? guideElements[0] : null;
     }
-    layer.setContent(tmpl(viewModel));
+    layer.setContent(tmpl(util.extend(viewModel, {templateId: this._templateId})));
 
     defaultStartDate = new TZDate(viewModel.start);
     defaultEndDate = new TZDate(viewModel.end);
@@ -667,7 +671,7 @@ ScheduleCreationPopup.prototype.hide = function() {
  */
 ScheduleCreationPopup.prototype.refresh = function() {
     if (this._viewModel) {
-        this.layer.setContent(this.tmpl(this._viewModel));
+        this.layer.setContent(this.tmpl(util.extend(this._viewModel, {templateId: this._templateId})));
     }
 };
 

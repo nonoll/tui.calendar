@@ -10,7 +10,8 @@ var FloatingLayer = require('../../common/floatingLayer');
 var util = require('tui-code-snippet');
 var config = require('../../config'),
     domevent = require('../../common/domevent'),
-    domutil = require('../../common/domutil');
+    domutil = require('../../common/domutil'),
+    templateUtil = require('../../common/templateUtil');
 var tmpl = require('../template/popup/scheduleDetailPopup.hbs');
 var tz = require('../../common/timezone');
 var TZDate = tz.Date;
@@ -23,6 +24,9 @@ var datetime = require('../../common/datetime');
  */
 function ScheduleDetailPopup(container) {
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     /**
      * @type {FloatingLayer}
      */
@@ -125,7 +129,8 @@ ScheduleDetailPopup.prototype.render = function(viewModel) {
 
     layer.setContent(tmpl({
         schedule: this._getScheduleModel(viewModel.schedule),
-        calendar: viewModel.calendar
+        calendar: viewModel.calendar,
+        templateId: this._templateId
     }));
     layer.show();
     this._setPopupPositionAndArrowDirection(viewModel.event);
@@ -404,7 +409,7 @@ ScheduleDetailPopup.prototype.hide = function() {
  */
 ScheduleDetailPopup.prototype.refresh = function() {
     if (this._viewModel) {
-        this.layer.setContent(this.tmpl(this._viewModel));
+        this.layer.setContent(this.tmpl(util.extend(this._viewModel, {templateId: this._templateId})));
     }
 };
 

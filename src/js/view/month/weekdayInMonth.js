@@ -8,6 +8,7 @@ var util = require('tui-code-snippet');
 var config = require('../../config'),
     common = require('../../common/common.js'),
     domutil = require('../../common/domutil'),
+    templateUtil = require('../../common/templateUtil'),
     View = require('../../view/view'),
     Weekday = require('../weekday'),
     baseTmpl = require('../template/month/weekdayInMonth.hbs'),
@@ -29,6 +30,7 @@ var mfloor = Math.floor,
  */
 function WeekdayInMonth(options, container) {
     Weekday.call(this, options, container);
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
     container.style.height = options.heightPercent + '%';
 }
 
@@ -107,7 +109,7 @@ WeekdayInMonth.prototype.getBaseViewModel = function(viewModel) {
  */
 WeekdayInMonth.prototype.render = function(viewModel) {
     var container = this.container,
-        baseViewModel = this.getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleContainer;
 
     if (!this.options.visibleWeeksCount) {

@@ -51,7 +51,7 @@
                                 color:#333;
                             {{/if}}
                             "
-                        data-title="{{model.title}}">{{{time-tmpl model}}}</span>
+                        data-title="{{model.title}}">{{{getCustomTemplate @root.templateId 'time' model}}}</span>
                 </div>
             {{else ~}}
                 <div data-schedule-id="{{model.id}}" data-calendar-id="{{model.calendarId}}" class="{{CSS_PREFIX}}weekday-schedule {{#if model.isFocused}}{{CSS_PREFIX}}weekday-schedule-focused {{/if}}"
@@ -69,7 +69,7 @@
                     {{/if}}
                         {{model.customStyle}}">
                     <span class="{{CSS_PREFIX}}weekday-schedule-title"
-                                    data-title="{{model.title}}">{{{schedule-tmpl model}}}</span>
+                                    data-title="{{model.title}}">{{{getCustomTemplate @root.templateId 'schedule' model}}}</span>
                 </div>
             {{/fi}}
         {{/fi}}

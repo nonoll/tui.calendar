@@ -10,6 +10,7 @@ var common = require('../../common/common');
 var datetime = require('../../common/datetime');
 var TZDate = require('../../common/timezone').Date;
 var domutil = require('../../common/domutil');
+var templateUtil = require('../../common/templateUtil');
 var View = require('../view');
 var daynameTmpl = require('../template/week/daynames.hbs');
 
@@ -38,6 +39,8 @@ function DayName(options, container, theme) {
     this.theme = theme;
 
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     this.applyTheme();
 }
@@ -95,7 +98,8 @@ DayName.prototype.render = function(viewModel) {
     var styles = this._getStyles(this.theme, timezonesCollapsed);
     var baseViewModel = util.extend({}, {
         dayNames: dayNames,
-        styles: styles
+        styles: styles,
+        templateId: this._templateId
     });
 
     this.container.innerHTML = daynameTmpl(baseViewModel);

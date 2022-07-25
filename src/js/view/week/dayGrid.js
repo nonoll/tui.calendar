@@ -13,7 +13,8 @@ var config = require('../../config'),
     View = require('../../view/view'),
     DayGridSchedule = require('./dayGridSchedule'),
     baseTmpl = require('../template/week/dayGrid.hbs'),
-    reqAnimFrame = require('../../common/reqAnimFrame');
+    reqAnimFrame = require('../../common/reqAnimFrame'),
+    templateUtil = require('../../common/templateUtil');
 var mmax = Math.max,
     mmin = Math.min;
 
@@ -38,6 +39,8 @@ function DayGrid(name, options, container, theme) {
         config.classname('daygrid-layout')
     );
     View.call(this, container);
+
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
 
     name = name || 'daygrid';
 
@@ -148,7 +151,7 @@ DayGrid.prototype.getBaseViewModel = function(viewModel) {
 DayGrid.prototype.render = function(viewModel) {
     var opt = this.options,
         container = this.container,
-        baseViewModel = this.getBaseViewModel(viewModel),
+        baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId}),
         scheduleContainerTop = this.options.scheduleContainerTop;
     var dayGridSchedule;
 

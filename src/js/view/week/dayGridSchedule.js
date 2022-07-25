@@ -6,6 +6,7 @@
 
 var util = require('tui-code-snippet');
 var Weekday = require('../weekday'),
+    templateUtil = require('../../common/templateUtil'),
     tmpl = require('../template/week/dayGridSchedule.hbs');
 var mmax = Math.max;
 
@@ -23,6 +24,8 @@ var mmax = Math.max;
 function DayGridSchedule(options, container) {
     Weekday.call(this, options, container);
 
+    this._templateId = templateUtil.getTemplateIdByContainer(container);
+
     this.collapsed = true;
 }
 
@@ -36,7 +39,7 @@ DayGridSchedule.prototype.render = function(viewModel) {
     var container = this.container;
     var baseViewModel;
 
-    baseViewModel = this.getBaseViewModel(viewModel);
+    baseViewModel = util.extend(this.getBaseViewModel(viewModel), {templateId: this._templateId});
 
     container.innerHTML = tmpl(baseViewModel);
 

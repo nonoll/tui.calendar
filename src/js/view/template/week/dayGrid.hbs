@@ -1,5 +1,5 @@
 <div class="{{CSS_PREFIX}}{{viewName}}-left {{CSS_PREFIX}}left" style="border-right: {{styles.leftBorderRight}}; width: {{styles.leftWidth}}; background-color: {{styles.leftBackgroundColor}}; padding-right: {{styles.leftPaddingRight}};">
-    {{{dayGridTitle-tmpl viewName}}}
+    {{{getCustomTemplate @root.templateId 'dayGridTitle' viewName}}}
 </div>
 <div class="{{CSS_PREFIX}}{{viewName}}-right {{CSS_PREFIX}}right">
     <div class="{{CSS_PREFIX}}container">
@@ -17,11 +17,11 @@
         {{#each days ~}}
             {{#if @root.collapsed}}
                 {{#if hiddenSchedules}}
-                    <span class="{{CSS_PREFIX}}weekday-exceed-in-week" style="z-index: 1; right:{{getRight left width}}%;" data-index="{{@key}}">{{{weekGridFooterExceed-tmpl hiddenSchedules}}}</span>
+                    <span class="{{CSS_PREFIX}}weekday-exceed-in-week" style="z-index: 1; right:{{getRight left width}}%;" data-index="{{@key}}">{{{getCustomTemplate @root.templateId 'weekGridFooterExceed' hiddenSchedules}}}</span>
                 {{/if}}
             {{else}}
                 {{#fi @key '===' @root.collapseBtnIndex}}
-                    <span class="{{CSS_PREFIX}}weekday-collapse-btn" style="z-index: 1; right:{{getRight left width}}%;">{{{collapseBtnTitle-tmpl}}}</span>
+                    <span class="{{CSS_PREFIX}}weekday-collapse-btn" style="z-index: 1; right:{{getRight left width}}%;">{{{getCustomTemplate @root.templateId 'collapseBtnTitle'}}}</span>
                 {{/fi}}
             {{/if}}
         {{/each ~}}

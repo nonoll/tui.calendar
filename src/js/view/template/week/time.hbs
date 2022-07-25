@@ -33,7 +33,7 @@
                 {{else}}
                     border-color:{{model.borderColor}};
                 {{/if}}
-                border-bottom: 1px dashed {{travelBorderColor}};">{{{goingDuration-tmpl model}}}</div>
+                border-bottom: 1px dashed {{travelBorderColor}};">{{{getCustomTemplate @root.templateId 'goingDuration' model}}}</div>
             {{/if}}
                 <div class="{{CSS_PREFIX}}time-schedule-content {{CSS_PREFIX}}time-schedule-content-time" style="height: {{modelDurationHeight}}px;
                 {{#if model.isFocused}}
@@ -42,7 +42,7 @@
                     border-color:{{model.borderColor}};
                 {{/if}}
                 {{#if hasComingDuration}}border-bottom: 1px dashed {{travelBorderColor}};{{/if}}">
-                    {{{time-tmpl model}}}
+                    {{{getCustomTemplate @root.templateId 'time' model}}}
                 </div>
             {{#if hasComingDuration}}
                 <div class="{{CSS_PREFIX}}time-schedule-content {{CSS_PREFIX}}time-schedule-content-travel-time" style="height: {{comingDurationHeight}}px;
@@ -50,7 +50,7 @@
                     border-color:{{model.color}};
                 {{else}}
                     border-color:{{model.borderColor}};
-                {{/if}};">{{{comingDuration-tmpl model}}}</div>
+                {{/if}};">{{{getCustomTemplate @root.templateId 'comingDuration' model}}}</div>
             {{/if}}
             </div>
             {{#unless (or croppedEnd (or @root.isReadOnly model.isReadOnly))}}<div class="{{CSS_PREFIX}}time-resize-handle handle-x" style="margin-left: {{@root.styles.paddingLeft}};">&nbsp;</div>{{/unless}}
