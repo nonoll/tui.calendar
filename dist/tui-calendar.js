@@ -23087,7 +23087,7 @@ var helpers = {
             return '';
         }
 
-        template = templateFn.apply(null, args);
+        template = templateFn.apply(null, args.concat(templateId));
 
         return sanitizer.sanitize(template);
     },
@@ -23400,8 +23400,8 @@ var helpers = {
         return '+' + hiddenSchedules;
     },
 
-    'dayGridTitle-tmpl': function(viewName) {
-        var tmpl = helpers[viewName + 'Title-tmpl'];
+    'dayGridTitle-tmpl': function(viewName, templateId) {
+        var tmpl = templateUtil.getCustomTemplates(templateId, viewName + 'Title') || helpers[viewName + 'Title-tmpl'];
         if (tmpl) {
             return tmpl(viewName);
         }
@@ -23409,8 +23409,8 @@ var helpers = {
         return viewName;
     },
 
-    'schedule-tmpl': function(model) {
-        var tmpl = helpers[model.category + '-tmpl'];
+    'schedule-tmpl': function(model, templateId) {
+        var tmpl = templateUtil.getCustomTemplates(templateId, model.category) || helpers[model.category + '-tmpl'];
         if (tmpl) {
             return tmpl(model);
         }
@@ -25287,7 +25287,7 @@ module.exports = (Handlebars['default'] || Handlebars).template({"1":function(co
     + "weekday-schedule-title\" title=\""
     + alias3(alias5(((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"title") : stack1), depth0))
     + "\">"
-    + ((stack1 = (lookupProperty(helpers,"schedule-tmpl")||(depth0 && lookupProperty(depth0,"schedule-tmpl"))||alias2).call(alias1,(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"schedule-tmpl","hash":{},"data":data,"loc":{"start":{"line":21,"column":87},"end":{"line":21,"column":112}}})) != null ? stack1 : "")
+    + ((stack1 = (lookupProperty(helpers,"getCustomTemplate")||(depth0 && lookupProperty(depth0,"getCustomTemplate"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"templateId")),"schedule",(depth0 != null ? lookupProperty(depth0,"model") : depth0),{"name":"getCustomTemplate","hash":{},"data":data,"loc":{"start":{"line":21,"column":87},"end":{"line":21,"column":144}}})) != null ? stack1 : "")
     + "</span>\n            "
     + ((stack1 = lookupProperty(helpers,"unless").call(alias1,(lookupProperty(helpers,"or")||(depth0 && lookupProperty(depth0,"or"))||alias2).call(alias1,((stack1 = (data && lookupProperty(data,"root"))) && lookupProperty(stack1,"isReadOnly")),((stack1 = (depth0 != null ? lookupProperty(depth0,"model") : depth0)) != null ? lookupProperty(stack1,"isReadOnly") : stack1),{"name":"or","hash":{},"data":data,"loc":{"start":{"line":22,"column":22},"end":{"line":22,"column":60}}}),{"name":"unless","hash":{},"fn":container.program(15, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":22,"column":12},"end":{"line":22,"column":193}}})) != null ? stack1 : "")
     + "\n        </div>\n    </div>\n";

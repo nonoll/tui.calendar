@@ -154,18 +154,21 @@
         }
 
         var Calendar = tui.Calendar;
-        const cal = new Calendar(document.getElementById("calendar"),{
-            defaultView: 'month',
-            useCreationPopup: true,
-            useDetailPopup: true,
-            templateId: '1234',
-            theme: {
-                'common.backgroundColor': 'rgba(255, 0, 0, 0.1)'
-            },
-            template: {
-                time2: ev => `cal - ${ev.id}`,
-            }
-        });
+        // const cal = new Calendar(document.getElementById("calendar"),{
+        //     defaultView: 'month',
+        //     useCreationPopup: true,
+        //     useDetailPopup: true,
+        //     templateId: '1234',
+        //     theme: {
+        //         'common.backgroundColor': 'rgba(255, 0, 0, 0.1)'
+        //     },
+        //     template: {
+        //         allday() {
+        //             return 'custom allday';
+        //         },
+        //         time2: ev => `cal - ${ev.id}`,
+        //     }
+        // });
         const cal2 = new Calendar(document.getElementById("calendar1"),{
             defaultView: 'week',
             useCreationPopup: true,
@@ -180,6 +183,12 @@
                 },
                 alldayTitle() {
                     return 'custom alldayTitle';
+                },
+                allday() {
+                    return 'custom allday';
+                },
+                time() {
+                    return 'custom time';
                 },
                 timegridDisplayTime({ hour, minutes }) {
                     return 'custom timegridDisplayTime';
@@ -200,21 +209,22 @@
             }
         });
 
-        const cal3 = new Calendar(document.getElementById("calendar2"),{
-            defaultView: 'day',
-            useCreationPopup: true,
-            useDetailPopup: true,
-            templateId: '33',
-            theme: {
-                'common.backgroundColor': 'rgba(0, 0, 255, 0.1)'
-            },
-            template: {
-                time: ev => `cal3 - ${ev.id}`,
-            }
-        });
+        // const cal3 = new Calendar(document.getElementById("calendar2"),{
+        //     defaultView: 'day',
+        //     useCreationPopup: true,
+        //     useDetailPopup: true,
+        //     templateId: '33',
+        //     theme: {
+        //         'common.backgroundColor': 'rgba(0, 0, 255, 0.1)'
+        //     },
+        //     template: {
+        //         time: ev => `cal3 - ${ev.id}`,
+        //     }
+        // });
 
         const now = new Date();
         const nowPlus1H = new Date(now.getTime() + (60*60*1000));
+        const nowPlus1Day = new Date(now.getTime() + (60*60*1000) * 25);
 
         const data1 = [
             {
@@ -223,7 +233,7 @@
                 title: 'My Event',
                 category: 'time',
                 start: now,
-                end: nowPlus1H,
+                end: nowPlus1Day,
             },
             {
                 id: '2',
@@ -267,14 +277,14 @@
             },
         ];
 
-        cal.createSchedules(data1);
-        cal.render();
+        // cal.createSchedules(data1);
+        // cal.render();
 
         cal2.createSchedules(data1);
         cal2.render();
 
-        cal3.createSchedules(data1);
-        cal3.render();
+        // cal3.createSchedules(data1);
+        // cal3.render();
 
         $('#menu-navi').on('click', onClickNavi);
     </script>

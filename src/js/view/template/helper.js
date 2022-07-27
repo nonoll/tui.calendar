@@ -44,7 +44,7 @@ var helpers = {
             return '';
         }
 
-        template = templateFn.apply(null, args);
+        template = templateFn.apply(null, args.concat(templateId));
 
         return sanitizer.sanitize(template);
     },
@@ -357,8 +357,8 @@ var helpers = {
         return '+' + hiddenSchedules;
     },
 
-    'dayGridTitle-tmpl': function(viewName) {
-        var tmpl = helpers[viewName + 'Title-tmpl'];
+    'dayGridTitle-tmpl': function(viewName, templateId) {
+        var tmpl = templateUtil.getCustomTemplates(templateId, viewName + 'Title') || helpers[viewName + 'Title-tmpl'];
         if (tmpl) {
             return tmpl(viewName);
         }
@@ -366,8 +366,8 @@ var helpers = {
         return viewName;
     },
 
-    'schedule-tmpl': function(model) {
-        var tmpl = helpers[model.category + '-tmpl'];
+    'schedule-tmpl': function(model, templateId) {
+        var tmpl = templateUtil.getCustomTemplates(templateId, model.category) || helpers[model.category + '-tmpl'];
         if (tmpl) {
             return tmpl(model);
         }
