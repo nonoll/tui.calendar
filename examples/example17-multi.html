@@ -154,21 +154,21 @@
         }
 
         var Calendar = tui.Calendar;
-        // const cal = new Calendar(document.getElementById("calendar"),{
-        //     defaultView: 'month',
-        //     useCreationPopup: true,
-        //     useDetailPopup: true,
-        //     templateId: '1234',
-        //     theme: {
-        //         'common.backgroundColor': 'rgba(255, 0, 0, 0.1)'
-        //     },
-        //     template: {
-        //         allday() {
-        //             return 'custom allday';
-        //         },
-        //         time2: ev => `cal - ${ev.id}`,
-        //     }
-        // });
+        const cal = new Calendar(document.getElementById("calendar"),{
+            defaultView: 'month',
+            useCreationPopup: true,
+            useDetailPopup: true,
+            templateId: '1234',
+            theme: {
+                'common.backgroundColor': 'rgba(255, 0, 0, 0.1)'
+            },
+            template: {
+                allday() {
+                    return 'custom allday';
+                },
+                time2: ev => `cal - ${ev.id}`,
+            }
+        });
         const cal2 = new Calendar(document.getElementById("calendar1"),{
             defaultView: 'week',
             useCreationPopup: true,
@@ -209,18 +209,18 @@
             }
         });
 
-        // const cal3 = new Calendar(document.getElementById("calendar2"),{
-        //     defaultView: 'day',
-        //     useCreationPopup: true,
-        //     useDetailPopup: true,
-        //     templateId: '33',
-        //     theme: {
-        //         'common.backgroundColor': 'rgba(0, 0, 255, 0.1)'
-        //     },
-        //     template: {
-        //         time: ev => `cal3 - ${ev.id}`,
-        //     }
-        // });
+        const cal3 = new Calendar(document.getElementById("calendar2"),{
+            defaultView: 'day',
+            useCreationPopup: true,
+            useDetailPopup: true,
+            templateId: '33',
+            theme: {
+                'common.backgroundColor': 'rgba(0, 0, 255, 0.1)'
+            },
+            template: {
+                time: ev => `cal3 - ${ev.id}`,
+            }
+        });
 
         const now = new Date();
         const nowPlus1H = new Date(now.getTime() + (60*60*1000));

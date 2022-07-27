@@ -688,6 +688,8 @@ Calendar.prototype.destroy = function() {
     this._layout.clear();
     this._layout.destroy();
 
+    templateUtil.removeCustomTemplates(this._templateId);
+
     util.forEach(this._options.template, function(func, name) {
         if (func) {
             Handlebars.unregisterHelper(name + '-tmpl');
