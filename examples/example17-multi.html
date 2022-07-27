@@ -175,6 +175,27 @@
                 'common.backgroundColor': 'rgba(0, 255, 0, 0.1)'
             },
             template: {
+                milestoneTitle() {
+                    return 'custom milestoneTitle';
+                },
+                alldayTitle() {
+                    return 'custom alldayTitle';
+                },
+                timegridDisplayTime({ hour, minutes }) {
+                    return 'custom timegridDisplayTime';
+                },
+                timegridCurrentTime() {
+                    return 'custom timegridCurrentTime';
+                },
+                timegridDisplayPrimaryTime({ hour }) {
+                    return 'custom timegridDisplayPrimaryTime';
+                },
+                taskTitle() {
+                    return 'custom taskTitle';
+                },
+                task(schedule) {
+                    return 'custom task';
+                },
                 time: ev => `cal2 - ${ev.id}`,
             }
         });

@@ -794,7 +794,7 @@ Calendar.prototype._setAdditionalInternalOptions = function(options) {
 
     util.forEach(options.template, function(func, name) {
         if (func) {
-            Handlebars.create().registerHelper(name + '-tmpl', templateWithSanitizer(func));
+            Handlebars.registerHelper(name + '-tmpl', templateWithSanitizer(func));
         }
     });
 

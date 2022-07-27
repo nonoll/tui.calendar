@@ -11086,7 +11086,7 @@ Calendar.prototype._setAdditionalInternalOptions = function(options) {
 
     util.forEach(options.template, function(func, name) {
         if (func) {
-            Handlebars.create().registerHelper(name + '-tmpl', templateWithSanitizer(func));
+            Handlebars.registerHelper(name + '-tmpl', templateWithSanitizer(func));
         }
     });
 
@@ -23060,9 +23060,28 @@ var SIXTY_MINUTES = 60;
 
 var helpers = {
     'getCustomTemplate': function(templateId, name) {
-        var templateFn = templateUtil.getCustomTemplates(templateId, name) || helpers[name + '-tmpl'];
+        var fallbackTemplateName = name + '-tmpl';
+        var templateFn = templateUtil.getCustomTemplates(templateId, name) || helpers[fallbackTemplateName];
         var args = Array.prototype.slice.call(arguments).slice(2);
         var template;
+
+        switch (fallbackTemplateName) {
+            case 'dayGridTitle-tmpl':
+                templateFn = templateUtil.getCustomTemplates(templateId, args[0] + 'Title') || helpers[fallbackTemplateName];
+                break;
+
+            case 'schedule-tmpl':
+                // eslint-disable-next-line max-len
+                templateFn = templateUtil.getCustomTemplates(templateId, args[0].category) || helpers[fallbackTemplateName];
+                break;
+
+            case 'timegridDisplayPrimayTime-tmpl':
+                templateFn = templateUtil.getCustomTemplates(templateId, 'timegridDisplayPrimaryTime') || helpers[fallbackTemplateName];
+                break;
+
+            default:
+                break;
+        }
 
         if (!templateFn) {
             return '';
@@ -23382,7 +23401,6 @@ var helpers = {
     },
 
     'dayGridTitle-tmpl': function(viewName) {
-        // var tmpl = Handlebars.helpers[viewName + 'Title-tmpl'];
         var tmpl = helpers[viewName + 'Title-tmpl'];
         if (tmpl) {
             return tmpl(viewName);
@@ -23392,7 +23410,6 @@ var helpers = {
     },
 
     'schedule-tmpl': function(model) {
-        // var tmpl = Handlebars.helpers[model.category + '-tmpl'];
         var tmpl = helpers[model.category + '-tmpl'];
         if (tmpl) {
             return tmpl(model);
@@ -23423,7 +23440,6 @@ var helpers = {
 
     'timegridDisplayPrimayTime-tmpl': function(time) {
         /* TODO: 삭제 필요 (will be deprecated) */
-        // return Handlebars.helpers['timegridDisplayPrimaryTime-tmpl'](time);
         return helpers['timegridDisplayPrimaryTime-tmpl'](time);
     },
 
