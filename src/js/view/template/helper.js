@@ -339,7 +339,8 @@ var helpers = {
     },
 
     'dayGridTitle-tmpl': function(viewName) {
-        var tmpl = Handlebars.helpers[viewName + 'Title-tmpl'];
+        // var tmpl = Handlebars.helpers[viewName + 'Title-tmpl'];
+        var tmpl = helpers[viewName + 'Title-tmpl'];
         if (tmpl) {
             return tmpl(viewName);
         }
@@ -348,7 +349,8 @@ var helpers = {
     },
 
     'schedule-tmpl': function(model) {
-        var tmpl = Handlebars.helpers[model.category + '-tmpl'];
+        // var tmpl = Handlebars.helpers[model.category + '-tmpl'];
+        var tmpl = helpers[model.category + '-tmpl'];
         if (tmpl) {
             return tmpl(model);
         }
@@ -378,7 +380,8 @@ var helpers = {
 
     'timegridDisplayPrimayTime-tmpl': function(time) {
         /* TODO: 삭제 필요 (will be deprecated) */
-        return Handlebars.helpers['timegridDisplayPrimaryTime-tmpl'](time);
+        // return Handlebars.helpers['timegridDisplayPrimaryTime-tmpl'](time);
+        return helpers['timegridDisplayPrimaryTime-tmpl'](time);
     },
 
     'timegridDisplayPrimaryTime-tmpl': function(time) {
