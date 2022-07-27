@@ -316,6 +316,7 @@ export interface IOptions {
     disableClick?: boolean;
     isReadOnly?: boolean;
     usageStatistics?: boolean;
+    templateId?: number | string;
 }
 
 export default class Calendar {
